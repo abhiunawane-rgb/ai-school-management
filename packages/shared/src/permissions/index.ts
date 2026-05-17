@@ -78,6 +78,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'notifications.send_whatsapp',
   ],
   sub_admin: [
+    'school.manage_staff',
     'school.manage_students',
     'school.view_analytics',
     'academic.manage_attendance',
