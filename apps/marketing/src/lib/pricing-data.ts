@@ -20,6 +20,21 @@ export function currencyToCountry(currency: string): string {
   return CURRENCIES.find((c) => c.code === currency)?.countryCode ?? 'IN';
 }
 
+/** India (INR) is the pricing source — other currencies are converted, not repriced higher */
+export const INR_EXCHANGE_RATES: Record<CurrencyCode, number> = {
+  INR: 1,
+  USD: 1 / 83,
+  EUR: 1 / 90,
+  GBP: 1 / 105,
+  AED: 1 / 22.7,
+};
+
+export function convertFromInr(amountInr: number, currency: CurrencyCode): number {
+  const value = amountInr * INR_EXCHANGE_RATES[currency];
+  if (currency === 'INR' || currency === 'AED') return Math.round(value);
+  return Math.round(value * 100) / 100;
+}
+
 export const PLANS: Plan[] = [
   {
     id: 'starter',
@@ -91,21 +106,6 @@ const BASE_FEATURE_PRICES_INR: Partial<Record<FeatureKey, number>> = {
   reports: 349,
   whatsapp_alerts: 499,
   ai_translations: 399,
-};
-
-const BASE_FEATURE_PRICES_USD: Partial<Record<FeatureKey, number>> = {
-  results: 9,
-  fees: 12,
-  social_feed: 8,
-  events: 7,
-  photo_gallery: 8,
-  bus_tracking: 49,
-  ai_chatbot: 29,
-  online_classes: 25,
-  analytics: 19,
-  reports: 12,
-  whatsapp_alerts: 19,
-  ai_translations: 15,
 };
 
 export const FEATURE_LABELS: Record<
@@ -204,6 +204,7 @@ export const FEATURE_LABELS: Record<
   },
 };
 
+/** India pricing — sole source for all currencies */
 export const COUNTRY_PRICING: Record<string, CountryPricing> = {
   IN: {
     countryCode: 'IN',
@@ -214,57 +215,16 @@ export const COUNTRY_PRICING: Record<string, CountryPricing> = {
     studentSlabs: [],
     featurePrices: { ...BASE_FEATURE_PRICES_INR },
   },
-  US: {
-    countryCode: 'US',
-    currency: 'USD',
-    basePrice: 99,
-    taxRate: 0,
-    paymentProvider: 'stripe',
-    studentSlabs: [],
-    featurePrices: { ...BASE_FEATURE_PRICES_USD },
-  },
-  EU: {
-    countryCode: 'EU',
-    currency: 'EUR',
-    basePrice: 89,
-    taxRate: 0.2,
-    paymentProvider: 'stripe',
-    studentSlabs: [],
-    featurePrices: { ...BASE_FEATURE_PRICES_USD },
-  },
-  GB: {
-    countryCode: 'GB',
-    currency: 'GBP',
-    basePrice: 79,
-    taxRate: 0.2,
-    paymentProvider: 'stripe',
-    studentSlabs: [],
-    featurePrices: { ...BASE_FEATURE_PRICES_USD },
-  },
-  AE: {
-    countryCode: 'AE',
-    currency: 'AED',
-    basePrice: 369,
-    taxRate: 0.05,
-    paymentProvider: 'stripe',
-    studentSlabs: [],
-    featurePrices: {
-      ...Object.fromEntries(
-        Object.entries(BASE_FEATURE_PRICES_USD).map(([k, v]) => [k, Math.round((v ?? 0) * 3.67)])
-      ),
-    },
-  },
 };
 
-const MIN_ADDON: Record<string, number> = { INR: 299, USD: 9, EUR: 8, GBP: 7, AED: 29 };
+const MIN_ADDON_INR = 299;
 
 export function getAddonPrice(feature: FeatureKey, currency: string, planId: string): number {
   const plan = PLANS.find((p) => p.id === planId);
   if (plan?.includedFeatures.includes(feature)) return 0;
-  const country = currencyToCountry(currency);
-  const pricing = COUNTRY_PRICING[country] ?? COUNTRY_PRICING.IN;
-  const c = pricing.currency;
-  return pricing.featurePrices[feature] ?? MIN_ADDON[c] ?? MIN_ADDON.INR;
+  const inr =
+    COUNTRY_PRICING.IN.featurePrices[feature] ?? MIN_ADDON_INR;
+  return convertFromInr(inr, currency as CurrencyCode);
 }
 
 export function isFeatureIncluded(planId: string, feature: FeatureKey): boolean {
@@ -279,22 +239,45 @@ export function getQuote(
   enabledAddons: FeatureKey[],
   billingInterval: 'monthly' | 'yearly'
 ) {
-  const countryCode = currencyToCountry(currency);
   const plan = PLANS.find((p) => p.id === planId) ?? PLANS[1]!;
-  const countryPricing = COUNTRY_PRICING[countryCode] ?? COUNTRY_PRICING.IN;
-  const pricingWithCurrency = { ...countryPricing, currency };
+  const countryCode = currencyToCountry(currency);
+  const code = currency as CurrencyCode;
   const staffMultiplier = 1 + Math.floor(teacherCount / 50) * 0.05;
-  const quote = calculateSubscriptionPrice({
+
+  const quoteInr = calculateSubscriptionPrice({
     plan,
-    countryPricing: pricingWithCurrency,
+    countryPricing: { ...COUNTRY_PRICING.IN, currency: 'INR' },
     studentCount,
     enabledFeatures: enabledAddons,
     billingInterval,
   });
+
+  const totalInr = Math.round(quoteInr.totalAmount * staffMultiplier);
+  const convert = (amount: number) => convertFromInr(amount, code);
+
+  if (code === 'INR') {
+    return {
+      ...quoteInr,
+      currency: 'INR',
+      totalAmount: totalInr,
+      teacherCount,
+      plan,
+      countryCode,
+    };
+  }
+
   return {
-    ...quote,
-    currency,
-    totalAmount: Math.round(quote.totalAmount * staffMultiplier),
+    ...quoteInr,
+    currency: code,
+    baseAmount: convert(quoteInr.baseAmount),
+    studentAmount: convert(quoteInr.studentAmount),
+    featureAmount: convert(quoteInr.featureAmount),
+    taxAmount: convert(quoteInr.taxAmount),
+    totalAmount: convert(totalInr),
+    breakdown: quoteInr.breakdown.map((item) => ({
+      ...item,
+      amount: convert(item.amount),
+    })),
     teacherCount,
     plan,
     countryCode,

@@ -66,6 +66,9 @@ export function PlanCalculator({ compact = false }: { compact?: boolean }) {
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-xs text-slate-500">
+                  Prices are set in INR and converted — same value, not a higher regional rate.
+                </p>
               </label>
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Billing cycle</span>
