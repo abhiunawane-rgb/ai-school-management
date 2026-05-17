@@ -2,6 +2,8 @@
 
 Production-grade global AI-powered school management SaaS platform.
 
+**Repository:** [github.com/abhiunawane-rgb/ai-school-management](https://github.com/abhiunawane-rgb/ai-school-management) — separate from the legacy [school-management](https://github.com/abhiunawane-rgb/school-management) project. See [docs/GITHUB.md](docs/GITHUB.md).
+
 ## Monorepo Structure
 
 ```
