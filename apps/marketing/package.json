@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "clean": "node -e \"const fs=require('fs');['.next','out'].forEach(d=>fs.rmSync(d,{recursive:true,force:true}))\"",
     "dev": "next dev --port 3002",
     "build": "next build",
     "build:bigrock": "node scripts/build-bigrock.mjs",

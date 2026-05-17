@@ -5,6 +5,7 @@
   "description": "Global AI-powered school management SaaS platform",
   "scripts": {
     "build": "turbo run build",
+    "clean": "turbo run clean --continue",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
