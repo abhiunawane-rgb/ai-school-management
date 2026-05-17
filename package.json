@@ -7,6 +7,8 @@
     "build": "turbo run build",
     "clean": "turbo run clean --continue",
     "dev": "turbo run dev",
+    "dev:clean": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-clean.ps1",
+    "dev:web": "turbo run dev --filter=@ai-school/marketing --filter=@ai-school/admin",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
