@@ -18,7 +18,7 @@ export default function HomePage() {
               Calculate your plan in seconds
             </h2>
             <p className="mt-3 text-slate-600">
-              Transparent student slab pricing. Add features. See your price instantly — no sales call required.
+              Transparent pricing by student count. Add modules. See your estimated cost instantly — no sales call required.
             </p>
           </FadeIn>
           <PlanCalculator />

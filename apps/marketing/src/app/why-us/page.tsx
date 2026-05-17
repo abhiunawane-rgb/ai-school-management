@@ -2,38 +2,39 @@ import type { Metadata } from 'next';
 import { FadeIn } from '@/components/motion';
 import { CtaBanner } from '@/components/sections/cta-banner';
 import { CheckCircle2 } from 'lucide-react';
+import { APP_NAME } from '@/lib/pricing-data';
 
 export const metadata: Metadata = {
   title: 'Why us',
-  description: 'Why schools choose AI School Management over fragmented tools.',
+  description: `Why schools choose ${APP_NAME} for unified operations and modern technology.`,
 };
 
 const reasons = [
   {
-    title: 'Why we built it',
-    body: 'Schools juggle 10+ apps for attendance, fees, transport, and communication. We unified them with AI — like leading platforms Entrar and modern work OS products, but purpose-built for education.',
+    title: 'Built for education',
+    body: `Schools often rely on many separate tools for attendance, fees, transport, and communication. ${APP_NAME} brings these capabilities together in one secure platform with AI built in.`,
   },
   {
-    title: 'Why schools switch',
-    body: 'Transparent slab pricing by student count. OTP-only security. White-label for your brand. Multi-country currency with Stripe and Razorpay.',
+    title: 'Clear, fair pricing',
+    body: 'Transparent pricing based on student count. Secure OTP login. Support for multiple currencies with Stripe and Razorpay. Your school branding on parent and staff apps.',
   },
   {
-    title: 'Why parents love it',
-    body: 'One app for fees, bus location, homework, and notices. Grade-smart student login keeps younger children on parent accounts.',
+    title: 'Designed for families',
+    body: 'Parents use one app for fees, bus location, homework, and school notices. Younger students can remain on parent accounts according to your school policy.',
   },
   {
-    title: 'Why decisions are faster',
-    body: 'Live calculator, 7-day trial, and autopilot onboarding — no week-long sales cycles. Visual hierarchy and familiar patterns reduce cognitive load.',
+    title: 'Fast to get started',
+    body: 'Use the live price calculator, start a 7-day free trial online, and complete setup in minutes — without a lengthy sales process.',
   },
 ];
 
 const proofs = [
-  'Multi-tenant global SaaS',
-  '7 role-based portals',
-  '18 feature modules',
-  'AI assistant + translations',
-  'Offline-ready mobile app',
-  'Enterprise Firestore security',
+  'Cloud platform for schools worldwide',
+  '7 role-based user portals',
+  '18 integrated modules',
+  'AI assistant and translations',
+  'Mobile apps for iOS and Android',
+  'Enterprise-grade data security',
 ];
 
 export default function WhyUsPage() {
@@ -41,9 +42,9 @@ export default function WhyUsPage() {
     <>
       <section className="gradient-hero section-padding">
         <div className="container-marketing max-w-3xl">
-          <h1 className="font-display text-4xl font-bold text-slate-900">Why AI School Management</h1>
+          <h1 className="font-display text-4xl font-bold text-slate-900">Why {APP_NAME}</h1>
           <p className="mt-4 text-lg text-slate-600">
-            What we believe, why it matters, and how we help you decide with confidence.
+            Modern school software with the reliability and clarity your administration team expects.
           </p>
         </div>
       </section>
@@ -61,7 +62,7 @@ export default function WhyUsPage() {
           </div>
           <FadeIn delay={0.2}>
             <aside className="rounded-2xl gradient-cta p-8 text-white h-fit sticky top-24">
-              <h2 className="text-2xl font-bold font-display">Best-in-market checklist</h2>
+              <h2 className="text-2xl font-bold font-display">Platform highlights</h2>
               <ul className="mt-6 space-y-3">
                 {proofs.map((p) => (
                   <li key={p} className="flex gap-2 text-sm">

@@ -5,7 +5,7 @@ import { APP_NAME, TRIAL_DAYS } from '@/lib/pricing-data';
 
 export const metadata: Metadata = {
   title: 'Pricing',
-  description: `Student slab pricing and feature add-ons. ${TRIAL_DAYS}-day free trial on ${APP_NAME}.`,
+  description: `Flexible plans and optional modules. ${TRIAL_DAYS}-day free trial on ${APP_NAME}.`,
 };
 
 export default function PricingPage() {

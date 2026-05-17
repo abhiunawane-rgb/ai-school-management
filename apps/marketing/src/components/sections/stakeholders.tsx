@@ -17,10 +17,10 @@ export function Stakeholders() {
       <div className="container-marketing">
         <FadeIn className="text-center max-w-2xl mx-auto">
           <h2 id="stakeholders-heading" className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">
-            Seamlessly integrate all stakeholders on one platform
+            One platform for your entire school community
           </h2>
           <p className="mt-4 text-slate-600">
-            Familiar roles. One login experience. Less switching, faster decisions (Jakob&apos;s Law).
+            Purpose-built access for leadership, staff, parents, students, and transport — each with the tools they need.
           </p>
         </FadeIn>
         <StaggerChildren className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

@@ -3,32 +3,33 @@ import { FadeIn } from '@/components/motion';
 import { CtaBanner } from '@/components/sections/cta-banner';
 import { Button } from '@/components/ui/button';
 import { UserPlus, Settings, Rocket, LineChart } from 'lucide-react';
+import { APP_NAME } from '@/lib/pricing-data';
 
 export const metadata: Metadata = {
   title: 'How it works',
-  description: 'How AI School Management works — signup, setup, and go live on autopilot.',
+  description: `How ${APP_NAME} works — sign up, configure your school, and go live.`,
 };
 
 const steps = [
   {
     icon: UserPlus,
-    title: 'Sign up in minutes',
-    desc: 'Enter school details, student & teacher counts. Our wizard configures your plan automatically.',
+    title: 'Register your school',
+    desc: 'Complete a short online form with school details, student and staff counts, and your preferred plan.',
   },
   {
     icon: Settings,
-    title: 'We provision your tenant',
-    desc: 'Multi-tenant workspace, roles, and feature flags are created instantly — no manual IT setup.',
+    title: 'Automatic school setup',
+    desc: 'We create your dedicated school account, user roles, and enabled modules — ready to use without manual IT configuration.',
   },
   {
     icon: Rocket,
-    title: 'Invite stakeholders',
-    desc: 'Admins, teachers, parents get OTP login links. Students follow grade-based access rules.',
+    title: 'Invite your team',
+    desc: 'Administrators, teachers, and parents sign in with secure OTP on mobile. Student access follows your school policies.',
   },
   {
     icon: LineChart,
-    title: 'Run on autopilot',
-    desc: 'Attendance alerts, fee reminders, bus GPS, and AI assistant work 24/7 with minimal admin effort.',
+    title: 'Operate with confidence',
+    desc: 'Attendance alerts, fee reminders, bus tracking, and the AI assistant help your school run efficiently every day.',
   },
 ];
 
@@ -37,10 +38,10 @@ export default function HowItWorksPage() {
     <>
       <section className="gradient-hero section-padding">
         <div className="container-marketing max-w-3xl">
-          <h1 className="font-display text-4xl font-bold text-slate-900">How we do it</h1>
+          <h1 className="font-display text-4xl font-bold text-slate-900">How {APP_NAME} works</h1>
           <p className="mt-4 text-lg text-slate-600">
-            From signup to live school — a guided, automatic journey. Matches how you already think about
-            onboarding (real-world mental model).
+            A clear, guided process from registration to daily operations — designed for school administrators
+            and IT teams.
           </p>
         </div>
       </section>
@@ -63,7 +64,7 @@ export default function HowItWorksPage() {
         </ol>
         <div className="container-marketing mt-12 text-center">
           <Button href="/signup" size="lg">
-            Start automated onboarding
+            Start your 7-day free trial
           </Button>
         </div>
       </section>

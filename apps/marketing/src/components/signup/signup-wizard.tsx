@@ -254,7 +254,7 @@ export function SignupWizard() {
           {step === 1 && (
             <>
               <h2 className="text-xl font-semibold">School size</h2>
-              <p className="mt-1 text-sm text-slate-500">Used for student slab pricing</p>
+              <p className="mt-1 text-sm text-slate-500">Used to calculate your subscription price</p>
               <label className="block mt-6">
                 <span className="flex justify-between text-sm font-medium">
                   Students <span className="text-brand-600">{students}</span>
@@ -492,7 +492,7 @@ export function SignupWizard() {
               <p className="mt-2 text-slate-600">
                 <strong>{schoolName}</strong> is registered. Your {TRIAL_DAYS}-day trial is active.
                 {savedLocally
-                  ? ' Details are saved in this browser (static preview host). Connect Vercel API for live provisioning.'
+                  ? ' Your registration is saved in this browser. Connect the live server to complete account activation.'
                   : ' Log in with OTP to complete setup.'}
               </p>
               <Button className="mt-6" onClick={() => (window.location.href = adminUrl)}>

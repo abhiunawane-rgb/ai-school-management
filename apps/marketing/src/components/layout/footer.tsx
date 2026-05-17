@@ -57,7 +57,7 @@ export function Footer() {
           <p className="text-sm text-slate-500">
             © {new Date().getFullYear()} AI School Management. All rights reserved.
           </p>
-          <p className="text-sm text-slate-500">Built for schools worldwide · OTP-secure · Multi-tenant</p>
+          <p className="text-sm text-slate-500">Built for schools worldwide · Secure OTP login · Cloud platform</p>
         </div>
       </div>
     </footer>

@@ -47,10 +47,38 @@ export function PlanCalculator({ compact = false }: { compact?: boolean }) {
         <div className={cn('space-y-6', compact ? '' : 'lg:col-span-3')}>
           <fieldset>
             <legend className="text-sm font-semibold text-slate-900 mb-3">Choose plan</legend>
-            <p className="text-xs text-slate-500 mb-3">
+            <p className="text-xs text-slate-500 mb-4">
               Each plan lists included features. Add-ons below are optional paid extras (minimum monthly charge
               applies).
             </p>
+            <div className="grid gap-4 sm:grid-cols-2 mb-6">
+              <label className="block">
+                <span className="text-sm font-medium text-slate-700">Currency</span>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                  className="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 text-sm"
+                  aria-label="Select billing currency"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-slate-700">Billing cycle</span>
+                <select
+                  value={interval}
+                  onChange={(e) => setInterval(e.target.value as 'monthly' | 'yearly')}
+                  className="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 text-sm"
+                >
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly (save 15%)</option>
+                </select>
+              </label>
+            </div>
             <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-1">
               {PLANS.map((p) => {
                 const selected = planId === p.id;
@@ -97,35 +125,6 @@ export function PlanCalculator({ compact = false }: { compact?: boolean }) {
               })}
             </div>
           </fieldset>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm font-medium text-slate-700">Currency</span>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-                className="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 text-sm"
-                aria-label="Select billing currency"
-              >
-                {CURRENCIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-slate-700">Billing cycle</span>
-              <select
-                value={interval}
-                onChange={(e) => setInterval(e.target.value as 'monthly' | 'yearly')}
-                className="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 text-sm"
-              >
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly (save 15%)</option>
-              </select>
-            </label>
-          </div>
 
           <label className="block">
             <span className="flex justify-between text-sm font-medium text-slate-700">

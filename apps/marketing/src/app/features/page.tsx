@@ -53,7 +53,7 @@ export default function FeaturesPage() {
             What we do
           </h1>
           <p className="mt-4 text-lg text-slate-600">
-            18 integrated modules. Toggle only what you need. Pay for students and features — not unused bloat.
+            18 integrated modules for school operations. Enable only the capabilities your school requires.
           </p>
         </div>
       </section>

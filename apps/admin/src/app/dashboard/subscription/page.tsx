@@ -16,8 +16,8 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Subscription & Pricing</h1>
+    <div className="p-6 max-w-4xl space-y-6">
+      <h1 className="text-2xl font-bold">Subscription and billing</h1>
       <Card>
         <CardHeader>
           <CardTitle>Live Price Calculator</CardTitle>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FadeIn } from '@/components/motion';
+import { APP_NAME } from '@/lib/pricing-data';
 import {
   Bus,
   Brain,
@@ -31,7 +32,7 @@ export function FeaturesPreview() {
               Everything in one ecosystem
             </h2>
             <p className="mt-2 text-slate-600 max-w-xl">
-              Replace fragmented tools. Fewer choices per screen, clearer paths (Hick&apos;s Law).
+              Replace disconnected systems with one integrated platform from {APP_NAME}.
             </p>
           </div>
           <Link

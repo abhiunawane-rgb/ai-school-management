@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: '%s | AI School Management',
   },
   description:
-    'All-in-one school management: attendance, fees, bus tracking, AI assistant, online classes. Student slab pricing. 7-day self-service trial.',
+    'All-in-one school management: attendance, fees, bus tracking, AI assistant, online classes. Flexible plans. 7-day free trial.',
   openGraph: {
     title: 'AI School Management',
     description: 'Transform your institution with AI-powered school ERP',

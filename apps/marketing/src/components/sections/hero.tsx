@@ -32,7 +32,7 @@ export function Hero() {
             className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-4 py-1.5 text-sm font-medium text-brand-700 shadow-sm"
           >
             <Zap className="h-4 w-4" aria-hidden />
-            AI-powered · Multi-tenant · Global
+            AI-powered · Secure · Global
           </motion.span>
 
           <motion.h1
@@ -51,8 +51,8 @@ export function Hero() {
             transition={{ delay: 0.2 }}
             className="mt-6 text-lg text-slate-600 sm:text-xl max-w-2xl mx-auto leading-relaxed"
           >
-            Unify attendance, fees, bus tracking, online classes, and AI — for admins,
-            teachers, parents, and students. One login. Every stakeholder.
+            Unify attendance, fees, bus tracking, online classes, and AI for administrators,
+            teachers, parents, and students — one platform, one secure login.
           </motion.p>
 
           <motion.div
@@ -110,7 +110,7 @@ export function Hero() {
               ))}
             </div>
             <p className="mt-8 text-center text-sm text-brand-100">
-              Built for fast decisions — transparent pricing by student & staff size
+              Enterprise-ready — transparent pricing by student and staff count
             </p>
           </div>
         </motion.div>
