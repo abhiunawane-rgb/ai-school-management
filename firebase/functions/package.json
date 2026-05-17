@@ -1,0 +1,27 @@
+{
+  "name": "@ai-school/functions",
+  "version": "1.0.0",
+  "private": true,
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": { "node": "20" },
+  "dependencies": {
+    "@ai-school/shared": "workspace:*",
+    "firebase-admin": "^13.4.0",
+    "firebase-functions": "^6.3.2",
+    "twilio": "^5.6.2",
+    "stripe": "^18.2.1",
+    "razorpay": "^2.9.6",
+    "zod": "^3.25.28"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  }
+}

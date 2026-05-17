@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pnpm install && pnpm --filter @ai-school/ai-service build"
+
+[deploy]
+startCommand = "node services/ai/dist/index.js"
+healthcheckPath = "/health"
+restartPolicyType = "on_failure"

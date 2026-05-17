@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "937134255900",
+    "project_id": "ai-school-management-3abe1",
+    "storage_bucket": "ai-school-management-3abe1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:937134255900:android:51c0db760a503a1926d4d9",
+        "android_client_info": {
+          "package_name": "com.aischool.management"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuZEbPBKVThXgSynCdlU26tiiPJnE9cik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

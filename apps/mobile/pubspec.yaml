@@ -1,0 +1,52 @@
+name: ai_school_mobile
+description: AI School Management — Flutter mobile app
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State & routing
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  go_router: ^14.8.1
+
+  # Firebase
+  firebase_core: ^3.13.0
+  firebase_auth: ^5.5.3
+  cloud_firestore: ^5.6.7
+  firebase_messaging: ^15.2.5
+  firebase_storage: ^12.4.5
+  cloud_functions: ^5.4.0
+
+  # Maps & location
+  google_maps_flutter: ^2.12.1
+  geolocator: ^14.0.0
+
+  # UI & utils
+  intl: ^0.20.2
+  cached_network_image: ^3.4.1
+  flutter_secure_storage: ^9.2.4
+  connectivity_plus: ^6.1.4
+  hive_flutter: ^1.1.0
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.15
+  riverpod_generator: ^2.6.5
+  freezed: ^3.0.6
+  json_serializable: ^6.9.5
+
+flutter:
+  uses-material-design: true
+  generate: true

@@ -1,0 +1,233 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers ───────────────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function membership(tenantId) {
+      return get(/databases/$(database)/documents/memberships/$(uid() + '_' + tenantId));
+    }
+
+    function hasMembership(tenantId) {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/memberships/$(uid() + '_' + tenantId))
+        && membership(tenantId).data.isActive == true;
+    }
+
+    function role(tenantId) {
+      return membership(tenantId).data.role;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(uid()))
+        && get(/databases/$(database)/documents/users/$(uid())).data.platformRole == 'super_admin';
+    }
+
+    function isSchoolAdmin(tenantId) {
+      return hasMembership(tenantId) && role(tenantId) in ['school_admin', 'sub_admin'];
+    }
+
+    function isStaff(tenantId) {
+      return hasMembership(tenantId)
+        && role(tenantId) in ['school_admin', 'sub_admin', 'teacher', 'driver'];
+    }
+
+    function tenantMatches(tenantId) {
+      return resource.data.tenantId == tenantId;
+    }
+
+    function incomingTenantMatches(tenantId) {
+      return request.resource.data.tenantId == tenantId;
+    }
+
+    // ─── Platform (super_admin only) ───────────────────────────────────────
+    match /tenants/{tenantId} {
+      allow read: if isSuperAdmin() || hasMembership(tenantId);
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin() || (hasMembership(tenantId) && role(tenantId) == 'school_admin');
+      allow delete: if isSuperAdmin();
+    }
+
+    match /plans/{planId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    match /country_pricing/{pricingId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    // ─── Users & auth ──────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (uid() == userId || isSuperAdmin());
+      allow create: if isAuthenticated() && uid() == userId;
+      allow update: if uid() == userId || isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /memberships/{membershipId} {
+      allow read: if isAuthenticated()
+        && (membershipId.matches(uid() + '_.*') || isSuperAdmin());
+      allow write: if isSuperAdmin() || isSchoolAdmin(resource.data.tenantId);
+    }
+
+    match /otp_sessions/{sessionId} {
+      allow read, write: if false; // Cloud Functions only
+    }
+
+    // ─── Subscriptions & billing ───────────────────────────────────────────
+    match /subscriptions/{subscriptionId} {
+      allow read: if isSuperAdmin()
+        || (isAuthenticated() && hasMembership(resource.data.tenantId));
+      allow write: if isSuperAdmin()
+        || (hasMembership(resource.data.tenantId) && role(resource.data.tenantId) == 'school_admin');
+    }
+
+    match /payment_intents/{intentId} {
+      allow read: if hasMembership(resource.data.tenantId)
+        && role(resource.data.tenantId) in ['school_admin', 'sub_admin'];
+      allow write: if false;
+    }
+
+    match /webhook_events/{eventId} {
+      allow read, write: if false;
+    }
+
+    // ─── Students & academic ───────────────────────────────────────────────
+    match /students/{studentId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow create, update: if isSchoolAdmin(resource.data.tenantId)
+        || (hasMembership(request.resource.data.tenantId) && isSchoolAdmin(request.resource.data.tenantId));
+      allow delete: if isSchoolAdmin(resource.data.tenantId);
+    }
+
+    match /attendance/{recordId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow create, update: if isStaff(resource.data.tenantId)
+        && role(resource.data.tenantId) in ['school_admin', 'sub_admin', 'teacher'];
+      allow delete: if isSchoolAdmin(resource.data.tenantId);
+    }
+
+    match /timetables/{docId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isStaff(resource.data.tenantId)
+        && role(resource.data.tenantId) in ['school_admin', 'sub_admin', 'teacher'];
+    }
+
+    match /homework/{docId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow create, update: if isStaff(resource.data.tenantId)
+        && role(resource.data.tenantId) in ['school_admin', 'sub_admin', 'teacher'];
+      allow delete: if isSchoolAdmin(resource.data.tenantId);
+    }
+
+    match /notices/{docId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isStaff(resource.data.tenantId);
+    }
+
+    match /results/{docId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isStaff(resource.data.tenantId)
+        && role(resource.data.tenantId) in ['school_admin', 'sub_admin', 'teacher'];
+    }
+
+    match /fees/{docId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isSchoolAdmin(resource.data.tenantId);
+    }
+
+    // ─── Social & events ───────────────────────────────────────────────────
+    match /feed_posts/{postId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow create: if hasMembership(request.resource.data.tenantId);
+      allow update, delete: if hasMembership(resource.data.tenantId)
+        && (resource.data.authorId == uid() || isSchoolAdmin(resource.data.tenantId));
+    }
+
+    match /events/{eventId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isStaff(resource.data.tenantId);
+    }
+
+    match /galleries/{galleryId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isStaff(resource.data.tenantId);
+    }
+
+    // ─── Transport ─────────────────────────────────────────────────────────
+    match /bus_routes/{routeId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isSchoolAdmin(resource.data.tenantId);
+    }
+
+    match /bus_locations/{routeId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if hasMembership(resource.data.tenantId)
+        && role(resource.data.tenantId) == 'driver';
+    }
+
+    // ─── Online classes & AI ─────────────────────────────────────────────────
+    match /online_classes/{classId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isStaff(resource.data.tenantId);
+    }
+
+    match /ai_sessions/{sessionId} {
+      allow read, create: if isAuthenticated()
+        && resource.data.userId == uid();
+      allow update: if resource.data.userId == uid();
+    }
+
+    // ─── Notifications ───────────────────────────────────────────────────────
+    match /notifications/{notificationId} {
+      allow read: if resource.data.userId == uid();
+      allow write: if false;
+    }
+
+    // ─── Reference data ────────────────────────────────────────────────────
+    match /branches/{branchId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isSchoolAdmin(resource.data.tenantId);
+    }
+
+    match /classes/{classId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isSchoolAdmin(resource.data.tenantId);
+    }
+
+    match /sections/{sectionId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isSchoolAdmin(resource.data.tenantId);
+    }
+
+    match /subjects/{subjectId} {
+      allow read: if hasMembership(resource.data.tenantId);
+      allow write: if isSchoolAdmin(resource.data.tenantId);
+    }
+
+    match /feature_flags/{tenantId} {
+      allow read: if hasMembership(tenantId);
+      allow write: if isSuperAdmin() || isSchoolAdmin(tenantId);
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isSuperAdmin() || isSchoolAdmin(resource.data.tenantId);
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

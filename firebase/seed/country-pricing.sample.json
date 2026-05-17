@@ -1,0 +1,35 @@
+[
+  {
+    "countryCode": "IN",
+    "currency": "INR",
+    "basePrice": 4999,
+    "taxRate": 0.18,
+    "paymentProvider": "razorpay",
+    "studentSlabs": [
+      { "minStudents": 0, "maxStudents": 100, "pricePerStudent": 15 },
+      { "minStudents": 101, "maxStudents": 500, "pricePerStudent": 12 },
+      { "minStudents": 501, "maxStudents": null, "pricePerStudent": 10 }
+    ],
+    "featurePrices": {
+      "ai_chatbot": 999,
+      "bus_tracking": 1499,
+      "whatsapp_alerts": 499
+    }
+  },
+  {
+    "countryCode": "US",
+    "currency": "USD",
+    "basePrice": 99,
+    "taxRate": 0,
+    "paymentProvider": "stripe",
+    "studentSlabs": [
+      { "minStudents": 0, "maxStudents": 100, "pricePerStudent": 0.5 },
+      { "minStudents": 101, "maxStudents": 500, "pricePerStudent": 0.4 },
+      { "minStudents": 501, "maxStudents": null, "pricePerStudent": 0.3 }
+    ],
+    "featurePrices": {
+      "ai_chatbot": 29,
+      "bus_tracking": 49
+    }
+  }
+]
