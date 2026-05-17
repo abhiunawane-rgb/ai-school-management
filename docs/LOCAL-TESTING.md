@@ -75,7 +75,7 @@ npx pnpm dev
 | Cloud database | Not connected | Firebase Firestore + deploy rules |
 | Live payments | Not connected | Stripe / Razorpay keys |
 | Push notifications | Backend only | Firebase + FCM |
-| Flutter mobile app | Scaffold | `cd apps/mobile && flutter run` + Firebase config |
+| Flutter mobile app | **Demo ready** — see [MOBILE-TESTING.md](./MOBILE-TESTING.md) | Install Flutter → `flutter create` → `flutter run` |
 | AI chat service | Separate service | `cd services/ai && pnpm dev` on Railway locally |
 
 ---

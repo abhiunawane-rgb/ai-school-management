@@ -9,16 +9,18 @@ class AiChatScreen extends StatefulWidget {
 
 class _AiChatScreenState extends State<AiChatScreen> {
   final _controller = TextEditingController();
-  final _messages = <({String text, bool isUser})>[];
+  final _messages = <({bool user, String text})>[
+    (user: false, text: 'Hello! I am the AI School Management assistant. Ask about homework, fees, or school policies.'),
+  ];
 
   void _send() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     setState(() {
-      _messages.add((text: text, isUser: true));
+      _messages.add((user: true, text: text));
       _messages.add((
-        text: 'AI response will connect to Railway AI service.',
-        isUser: false,
+        user: false,
+        text: 'This is a demo reply. Connect the AI service (services/ai) for real answers.',
       ));
     });
     _controller.clear();
@@ -37,15 +39,15 @@ class _AiChatScreenState extends State<AiChatScreen> {
               itemBuilder: (context, i) {
                 final m = _messages[i];
                 return Align(
-                  alignment: m.isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: m.user ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: m.isUser
+                      color: m.user
                           ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
+                          : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(m.text),
                   ),
@@ -61,7 +63,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   child: TextField(
                     controller: _controller,
                     decoration: const InputDecoration(
-                      hintText: 'Ask anything...',
+                      hintText: 'Ask a question…',
                       border: OutlineInputBorder(),
                     ),
                     onSubmitted: (_) => _send(),
