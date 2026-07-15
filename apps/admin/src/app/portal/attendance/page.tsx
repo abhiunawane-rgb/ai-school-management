@@ -69,7 +69,7 @@ export default function PortalAttendancePage() {
           <CardContent className="space-y-3">
             {DEMO_CLASS_ROSTER.map((s) => (
               <div key={s.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b pb-3">
-                <span className="font-medium text-sm text-slate-900">{s.name}</span>
+                <span className="font-medium text-sm">{s.name}</span>
                 <div className="flex flex-wrap gap-1">
                   {(['present', 'absent', 'late', 'on_leave'] as AttendanceMark[]).map((st) => (
                     <Button

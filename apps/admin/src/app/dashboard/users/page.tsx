@@ -258,7 +258,7 @@ export default function UsersPage() {
                     </span>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-ink-900">{m.name?.trim() || "Unnamed user"}</p>
+                        <p className="font-medium text-slate-900">{m.name}</p>
                         <span className={cn('text-xs font-medium rounded-full px-2 py-0.5 capitalize', STATUS_STYLE[m.status])}>
                           {m.status}
                         </span>

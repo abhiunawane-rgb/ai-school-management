@@ -103,8 +103,8 @@ export default function AttendancePage() {
               <tbody>
                 {records.map((r) => (
                   <tr key={r.id} className="border-b border-slate-100">
-                    <td className="py-3 pr-4 font-medium text-slate-900">{r.studentName}</td>
-                    <td className="py-3 pr-4 text-slate-700">{r.classSection}</td>
+                    <td className="py-3 pr-4 font-medium">{r.studentName}</td>
+                    <td className="py-3 pr-4">{r.classSection}</td>
                     <td className="py-3">
                       <div className="flex flex-wrap gap-1">
                         {STATUS_OPTIONS.map((status) => (

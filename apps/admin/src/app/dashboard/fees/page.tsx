@@ -346,8 +346,8 @@ export default function FeesPage() {
                   rows.map(({ account, totalFees, totalPaid, pending, status }) => (
                     <Fragment key={account.id}>
                       <tr className="border-b hover:bg-slate-50/80">
-                        <td className="py-3 pr-4 font-medium text-slate-900">{account.studentName}</td>
-                        <td className="py-3 pr-4 text-slate-700">{account.classSection}</td>
+                        <td className="py-3 pr-4 font-medium">{account.studentName}</td>
+                        <td className="py-3 pr-4">{account.classSection}</td>
                         <td className="py-3 pr-4 text-right">{formatMoney(totalFees, currency)}</td>
                         <td className="py-3 pr-4 text-right text-emerald-700">
                           {formatMoney(totalPaid, currency)}
