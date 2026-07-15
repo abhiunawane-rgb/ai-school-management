@@ -4,6 +4,10 @@ import { useSchool } from '@/hooks/use-school';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { formatCardBrand } from '@/lib/billing-utils';
+import { getMarketingUrl } from '@/lib/env';
+
+import { RequireSchoolAdmin } from '@/components/dashboard/require-school-admin';
 
 export default function SubscriptionPage() {
   const { state } = useSchool();
@@ -11,10 +15,15 @@ export default function SubscriptionPage() {
 
   const { school } = state;
   const trialEnd = new Date(school.trialEndsAt).toLocaleDateString();
-  const estimated = school.currency === 'INR' ? '₹2,499' : '$49';
+  const nextBill = school.nextBillingDate
+    ? new Date(school.nextBillingDate).toLocaleDateString()
+    : trialEnd;
+  const pm = school.paymentMethod;
+  const marketingUrl = getMarketingUrl();
 
   return (
-    <div className="p-6 max-w-3xl space-y-6">
+    <RequireSchoolAdmin>
+    <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Subscription</h1>
         <p className="text-slate-600 text-sm mt-1">Your plan, trial, and enabled modules.</p>
@@ -51,14 +60,23 @@ export default function SubscriptionPage() {
               <span className="font-medium">{school.teacherCount}</span>
             </p>
           </div>
+          {pm && (
+            <p className="rounded-lg bg-slate-50 border p-3 text-slate-800">
+              <strong>Payment method on file:</strong> {formatCardBrand(pm.brand)} •••• {pm.last4} (exp{' '}
+              {String(pm.expMonth).padStart(2, '0')}/{pm.expYear}) · via{' '}
+              {pm.provider === 'razorpay' ? 'Razorpay' : 'Stripe'}
+            </p>
+          )}
           {school.subscriptionStatus === 'trial' && (
             <p className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-amber-900">
-              Free trial ends on <strong>{trialEnd}</strong>. Billing starts automatically after trial unless
-              you cancel.
+              Free trial ends <strong>{trialEnd}</strong>. First charge (in advance) on{' '}
+              <strong>{nextBill}</strong> unless you cancel. Auto-renew:{' '}
+              {school.autoRenew !== false ? 'On' : 'Off'}.
             </p>
           )}
           <p className="text-muted-foreground">
-            Estimated cost after trial: <strong>{estimated}</strong> / {school.billingInterval === 'yearly' ? 'year' : 'month'}
+            Billing cycle: <strong className="capitalize">{school.billingInterval}</strong> — charged in advance
+            each period from your saved card.
           </p>
           <Button asChild variant="secondary">
             <Link href="/dashboard/billing">View invoices</Link>
@@ -73,12 +91,13 @@ export default function SubscriptionPage() {
         <CardContent className="text-sm text-muted-foreground space-y-3">
           <p>To change your plan or add modules, use the marketing site calculator or contact support.</p>
           <Button asChild>
-            <a href="http://localhost:3002/pricing" target="_blank" rel="noopener noreferrer">
+            <a href={`${marketingUrl}/pricing`} target="_blank" rel="noopener noreferrer">
               Open pricing calculator
             </a>
           </Button>
         </CardContent>
       </Card>
     </div>
+    </RequireSchoolAdmin>
   );
 }

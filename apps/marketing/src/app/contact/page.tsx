@@ -1,13 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { INQUIRY_TOPICS } from '@ai-school/shared';
 import { Button } from '@/components/ui/button';
+import { SelectField } from '@/components/ui/select-field';
+import { useNotify } from '@/components/notifications/notification-provider';
 import { Mail, Phone, MapPin, Loader2 } from 'lucide-react';
 
 export default function ContactPage() {
+  const notify = useNotify();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
+  const [topic, setTopic] = useState<string>(INQUIRY_TOPICS[0]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,12 +27,42 @@ export default function ContactPage() {
           name: form.get('name'),
           email: form.get('email'),
           school: form.get('school'),
+          topic,
           message: form.get('message'),
         }),
       });
       if (!res.ok) throw new Error('Failed to send');
       setDone(true);
+      notify.success('Message sent', 'We received your message and will reply within one business day.');
     } catch {
+      if (typeof window !== 'undefined') {
+        const name = String(form.get('name') ?? '');
+        const email = String(form.get('email') ?? '');
+        const school = String(form.get('school') ?? '');
+        const message = String(form.get('message') ?? '');
+        const fallback = { name, email, school, topic, message, savedAt: new Date().toISOString() };
+        localStorage.setItem('aischool_contact_pending', JSON.stringify(fallback));
+
+        const subject = encodeURIComponent(`[AI School Management] ${topic} — ${school || name}`);
+        const body = encodeURIComponent(
+          `Name: ${name}\nEmail: ${email}\nSchool: ${school}\nTopic: ${topic}\n\n${message}`
+        );
+        window.location.href = `mailto:hello@aischool.app?subject=${subject}&body=${body}`;
+
+        setDone(true);
+        notify.success(
+          'Opening your email app',
+          'We also saved a copy on this device.',
+          'Send the email to reach our team. Or write hello@aischool.app directly.'
+        );
+        setError('');
+        return;
+      }
+      notify.error(
+        'Could not send',
+        'The message could not be delivered.',
+        'Email hello@aischool.app directly.'
+      );
       setError('Could not send message. Please email support directly.');
     } finally {
       setLoading(false);
@@ -49,7 +84,7 @@ export default function ContactPage() {
           <div className="space-y-6">
             {[
               { icon: Mail, label: 'Email', value: 'hello@aischool.app' },
-              { icon: Phone, label: 'Phone', value: '+91 (support line)' },
+              { icon: Phone, label: 'Phone', value: '+91 98765 43210' },
               { icon: MapPin, label: 'Global', value: 'Serving schools in 50+ countries' },
             ].map((item) => (
               <div key={item.label} className="flex gap-4">
@@ -88,6 +123,14 @@ export default function ContactPage() {
                 <span className="text-sm font-medium">School</span>
                 <input name="school" className="mt-1 w-full h-11 rounded-xl border px-3" />
               </label>
+              <SelectField
+                id="contact-topic"
+                label="Topic"
+                required
+                value={topic}
+                onChange={setTopic}
+                options={INQUIRY_TOPICS.map((t) => ({ value: t, label: t }))}
+              />
               <label className="block">
                 <span className="text-sm font-medium">Message</span>
                 <textarea name="message" rows={4} required className="mt-1 w-full rounded-xl border p-3" />

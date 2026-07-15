@@ -31,8 +31,8 @@ export function Footer() {
               AI School Management
             </Link>
             <p className="mt-4 max-w-sm text-sm text-slate-600 leading-relaxed">
-              Global AI-powered school ERP. One platform for attendance, fees, bus tracking,
-              online classes, and intelligent automation.
+              Global AI-powered school ERP. <strong className="text-slate-800">Full web platform live now.</strong>{' '}
+              Native iOS & Android apps — in progress, coming soon for all schools.
             </p>
           </div>
           {Object.entries(links).map(([title, items]) => (
@@ -57,7 +57,7 @@ export function Footer() {
           <p className="text-sm text-slate-500">
             © {new Date().getFullYear()} AI School Management. All rights reserved.
           </p>
-          <p className="text-sm text-slate-500">Built for schools worldwide · Secure OTP login · Cloud platform</p>
+          <p className="text-sm text-slate-500">Built for schools worldwide · Web live now · iOS & Android coming soon</p>
         </div>
       </div>
     </footer>

@@ -13,6 +13,8 @@ function formatMoney(amount: number, currency: string) {
   }
 }
 
+import { RequireSchoolAdmin } from '@/components/dashboard/require-school-admin';
+
 export default function BillingPage() {
   const { state } = useSchool();
   if (!state) return null;
@@ -20,7 +22,8 @@ export default function BillingPage() {
   const { school, invoices } = state;
 
   return (
-    <div className="p-6 max-w-3xl space-y-6">
+    <RequireSchoolAdmin>
+    <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Billing & invoices</h1>
         <p className="text-slate-600 text-sm mt-1">Payment history and invoices for {school.name}.</p>
@@ -79,5 +82,6 @@ export default function BillingPage() {
         </CardContent>
       </Card>
     </div>
+    </RequireSchoolAdmin>
   );
 }

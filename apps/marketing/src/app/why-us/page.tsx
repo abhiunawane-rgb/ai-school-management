@@ -5,8 +5,9 @@ import { CheckCircle2 } from 'lucide-react';
 import { APP_NAME } from '@/lib/pricing-data';
 
 export const metadata: Metadata = {
-  title: 'Why us',
-  description: `Why schools choose ${APP_NAME} for unified operations and modern technology.`,
+  title: 'Why schools choose AI School Management',
+  description: `Why schools choose ${APP_NAME}: OTP-only security, multi-currency pricing, 18+ modules, admin + parent portal, and AI assistance.`,
+  alternates: { canonical: '/why-us/' },
 };
 
 const reasons = [

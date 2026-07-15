@@ -20,7 +20,24 @@
   }
 
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-indigo-500;
+    @apply outline-2 outline-offset-2;
+    outline-color: #6366f1;
+  }
+}
+
+@layer components {
+  .touch-target {
+    @apply inline-flex items-center justify-center min-h-11 min-w-11;
+  }
+
+  .touch-target-inline {
+    @apply inline-flex items-center min-h-11 px-3;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --border: 148 163 184;
   }
 }
 
@@ -53,6 +70,35 @@
 
   .glass-nav {
     @apply border-b border-slate-200/80 bg-white/80 backdrop-blur-lg;
+  }
+
+  .icon-3d-scene {
+    perspective: 800px;
+    display: inline-block;
+  }
+
+  .icon-3d-face {
+    @apply flex items-center justify-center shadow-lg;
+    transform-style: preserve-3d;
+    box-shadow:
+      0 4px 0 rgb(15 23 42 / 0.06),
+      0 12px 24px -8px rgb(79 70 229 / 0.25);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .icon-3d-scene:hover .icon-3d-face {
+    box-shadow:
+      0 6px 0 rgb(15 23 42 / 0.05),
+      0 20px 40px -10px rgb(79 70 229 / 0.35);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
 

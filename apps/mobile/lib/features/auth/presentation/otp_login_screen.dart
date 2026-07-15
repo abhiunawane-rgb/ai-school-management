@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_state_provider.dart';
 import '../../../core/demo/demo_store.dart';
 import '../../../core/models/user_role.dart';
+import '../../../core/notifications/app_notifications.dart';
 
 /// Sign in with role selection — demo mode for local testing without Firebase.
 class OtpLoginScreen extends ConsumerStatefulWidget {
@@ -23,11 +24,21 @@ class _OtpLoginScreenState extends ConsumerState<OtpLoginScreen> {
 
   Future<void> _signIn() async {
     if (_phoneController.text.trim().length < 8) {
-      _showSnack('Enter a valid phone number');
+      AppNotifications.error(
+        context,
+        'Invalid phone',
+        'Enter a valid phone number with country code.',
+        solution: 'Use at least 8 digits.',
+      );
       return;
     }
     if (_otpController.text.trim().length != 6) {
-      _showSnack('Enter 6-digit OTP (use 123456 for testing)');
+      AppNotifications.error(
+        context,
+        'Invalid OTP',
+        'Enter the 6-digit verification code.',
+        solution: 'For testing, use 123456.',
+      );
       return;
     }
 
@@ -43,14 +54,19 @@ class _OtpLoginScreenState extends ConsumerState<OtpLoginScreen> {
       );
       await DemoStore.saveSession(session);
       ref.read(demoSessionProvider.notifier).state = session;
+      if (mounted) {
+        AppNotifications.success(
+          context,
+          'Signed in',
+          'Welcome, ${session.userName}.',
+          solution: 'Your ${_role.label} dashboard is ready.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
 
   @override
   Widget build(BuildContext context) {

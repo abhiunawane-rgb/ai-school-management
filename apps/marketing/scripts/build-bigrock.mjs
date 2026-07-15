@@ -43,7 +43,7 @@ try {
     );
     process.exit(1);
   }
-  run('npx', ['next', 'build'], { BIGROCK_STATIC: '1' });
+  run('npx', ['next', 'build'], { BIGROCK_STATIC: '1', NODE_ENV: 'production' });
 } catch (e) {
   console.error(e);
   process.exit(1);
@@ -59,6 +59,11 @@ if (!existsSync(outDir)) {
 rmSync(uploadDir, { recursive: true, force: true });
 mkdirSync(uploadDir, { recursive: true });
 cpSync(outDir, uploadDir, { recursive: true });
+
+const htaccess = join(root, '..', '..', 'scripts', 'bigrock.htaccess');
+if (existsSync(htaccess)) {
+  cpSync(htaccess, join(uploadDir, '.htaccess'));
+}
 
 console.log('\n✓ BigRock upload folder ready:');
 console.log(uploadDir);

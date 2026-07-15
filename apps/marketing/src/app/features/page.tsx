@@ -19,8 +19,15 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Features',
-  description: 'Full feature list for AI School Management — attendance, fees, AI, bus tracking, and more.',
+  title: 'School management features — attendance, fees, bus, AI',
+  description:
+    'Explore AI School Management features: attendance, timetable, homework, fees, bus tracking, AI assistant, online classes, analytics, WhatsApp alerts, and more.',
+  alternates: { canonical: '/features/' },
+  openGraph: {
+    title: 'School ERP features | AI School Management',
+    description: 'Attendance, fees, bus GPS, AI assistant, and 18+ modules for modern schools.',
+    url: '/features/',
+  },
 };
 
 const icons: Record<string, typeof Calendar> = {

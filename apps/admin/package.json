@@ -6,6 +6,7 @@
     "clean": "node -e \"const fs=require('fs');fs.rmSync('.next',{recursive:true,force:true})\"",
     "dev": "next dev --port 3001",
     "build": "next build",
+    "build:bigrock": "node scripts/build-bigrock.mjs",
     "start": "next start --port 3001",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"

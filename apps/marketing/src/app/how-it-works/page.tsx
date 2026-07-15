@@ -6,8 +6,9 @@ import { UserPlus, Settings, Rocket, LineChart } from 'lucide-react';
 import { APP_NAME } from '@/lib/pricing-data';
 
 export const metadata: Metadata = {
-  title: 'How it works',
-  description: `How ${APP_NAME} works — sign up, configure your school, and go live.`,
+  title: 'How school ERP onboarding works',
+  description: `How ${APP_NAME} works — calculate your plan, start a 7-day trial, set up billing, invite staff & parents, and go live.`,
+  alternates: { canonical: '/how-it-works/' },
 };
 
 const steps = [

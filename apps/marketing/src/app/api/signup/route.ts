@@ -4,6 +4,17 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { TRIAL_DAYS } from '@/lib/pricing-data';
 
+const paymentMethodSchema = z.object({
+  cardholderName: z.string().min(2),
+  last4: z.string().length(4),
+  brand: z.enum(['visa', 'mastercard', 'amex', 'rupay', 'unknown']),
+  expMonth: z.number().int().min(1).max(12),
+  expYear: z.number().int().min(2024),
+  provider: z.enum(['stripe', 'razorpay']),
+  paymentMethodToken: z.string().min(8),
+  onFileSince: z.string(),
+});
+
 const signupSchema = z.object({
   schoolName: z.string().min(2).max(120),
   schoolAddress: z.string().optional(),
@@ -26,6 +37,7 @@ const signupSchema = z.object({
   trialDays: z.number().default(TRIAL_DAYS),
   acceptedTerms: z.literal(true),
   acceptedAutoRenew: z.literal(true),
+  paymentMethod: paymentMethodSchema,
 });
 
 const LEADS_DIR = join(process.cwd(), '.data', 'leads');
@@ -51,6 +63,8 @@ export async function POST(request: Request) {
       status: 'trial_active',
       trialEndsAt: trialEndsAt.toISOString(),
       subscriptionStartsAt: trialEndsAt.toISOString(),
+      nextBillingDate: trialEndsAt.toISOString(),
+      autoRenew: true,
       createdAt: new Date().toISOString(),
     };
 
@@ -63,15 +77,20 @@ export async function POST(request: Request) {
       await writeFile(join(LEADS_DIR, `${lead.id}_logo.txt`), logoBase64, 'utf-8');
     }
 
-    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3001';
-    const checkoutUrl = `${adminUrl}/login?tenant=${tenantSlug}&trial=1&phone=${encodeURIComponent(data.phone)}`;
+    const marketingUrl = process.env.NEXT_PUBLIC_MARKETING_URL ?? 'http://localhost:3002';
+    const checkoutUrl = `${marketingUrl}/login?tenant=${tenantSlug}&trial=1&phone=${encodeURIComponent(data.phone)}`;
 
     return NextResponse.json({
       success: true,
       leadId: lead.id,
       tenantSlug,
       trialDays: TRIAL_DAYS,
-      message: `${TRIAL_DAYS}-day trial started. Subscription auto-starts after trial unless canceled.`,
+      paymentMethod: {
+        last4: data.paymentMethod.last4,
+        brand: data.paymentMethod.brand,
+        provider: data.paymentMethod.provider,
+      },
+      message: `Card saved. ${TRIAL_DAYS}-day trial active. Billing starts ${trialEndsAt.toLocaleDateString()} unless canceled.`,
       checkoutUrl,
     });
   } catch (e) {

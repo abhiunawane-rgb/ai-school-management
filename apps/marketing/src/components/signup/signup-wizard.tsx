@@ -4,7 +4,7 @@ import { useState, useMemo, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { FEATURE_KEYS, type FeatureKey } from '@ai-school/shared';
+import { FEATURE_KEYS, type FeatureKey, BOARDS, CITIES } from '@ai-school/shared';
 import {
   getQuote,
   PLANS,
@@ -18,10 +18,21 @@ import {
 } from '@/lib/pricing-data';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Check, Loader2, ArrowLeft, ArrowRight, Upload, AlertCircle } from 'lucide-react';
+import { PaymentMethodForm } from './payment-method-form';
+import {
+  validatePaymentMethod,
+  tokenizePaymentMethod,
+  type PaymentMethodInput,
+} from '@/lib/payment-utils';
+import { useNotify } from '@/components/notifications/notification-provider';
+import { SelectField } from '@/components/ui/select-field';
+import { registerPhoneAccount } from '@/lib/auth-session';
+import { getMarketingUrl } from '@/lib/site-urls';
 
-const STEPS = ['School profile', 'Size', 'Plan', 'Subscription', 'Admin', 'Done'] as const;
+const STEPS = ['School profile', 'Size', 'Plan', 'Subscription', 'Payment', 'Admin', 'Done'] as const;
 
 export function SignupWizard() {
+  const notify = useNotify();
   const params = useSearchParams();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -31,8 +42,8 @@ export function SignupWizard() {
 
   const [schoolName, setSchoolName] = useState('');
   const [schoolAddress, setSchoolAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [board, setBoard] = useState('');
+  const [city, setCity] = useState<string>(CITIES[0]);
+  const [board, setBoard] = useState<string>(BOARDS[0]);
   const [schoolWebsite, setSchoolWebsite] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoBase64, setLogoBase64] = useState<string | null>(null);
@@ -57,6 +68,14 @@ export function SignupWizard() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedAutoRenew, setAcceptedAutoRenew] = useState(false);
   const [savedLocally, setSavedLocally] = useState(false);
+  const [paymentInput, setPaymentInput] = useState<PaymentMethodInput>({
+    cardholderName: '',
+    cardNumber: '',
+    expMonth: '',
+    expYear: '',
+    cvv: '',
+  });
+  const [paymentSaved, setPaymentSaved] = useState<{ last4: string; brand: string } | null>(null);
 
   const plan = PLANS.find((p) => p.id === planId)!;
   const optionalFeatures = FEATURE_KEYS.filter((f) => !isFeatureIncluded(planId, f));
@@ -83,11 +102,23 @@ export function SignupWizard() {
     reader.readAsDataURL(file);
   }
 
+  function validateAndTokenizePayment() {
+    const err = validatePaymentMethod(paymentInput);
+    if (err) {
+      setError(err);
+      return null;
+    }
+    return tokenizePaymentMethod(paymentInput, currency);
+  }
+
   async function submit() {
     if (!acceptedTerms || !acceptedAutoRenew) {
-      setError('Please accept trial and subscription terms to continue.');
+      notify.error('Terms required', 'Accept trial and subscription terms to continue.', 'Check both agreement boxes.');
       return;
     }
+    const paymentMethod = validateAndTokenizePayment();
+    if (!paymentMethod) return;
+
     setLoading(true);
     setError('');
     const payload = {
@@ -112,6 +143,7 @@ export function SignupWizard() {
       trialDays: TRIAL_DAYS,
       acceptedTerms,
       acceptedAutoRenew: true,
+      paymentMethod,
     };
 
     try {
@@ -122,19 +154,49 @@ export function SignupWizard() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Signup failed');
+      registerPhoneAccount({
+        id: `user_signup_${phone.replace(/\D/g, '').slice(-10)}`,
+        name: adminName,
+        phone,
+        role: 'school_admin',
+      });
+      localStorage.setItem('aischool_signup_pending', JSON.stringify(payload));
       setSavedLocally(false);
-      setStep(5);
+      setPaymentSaved(data.paymentMethod ?? { last4: paymentMethod.last4, brand: paymentMethod.brand });
+      setStep(6);
+      notify.success(
+        'Trial started',
+        `${schoolName} is registered. Your ${TRIAL_DAYS}-day trial is active.`,
+        'Sign in with your mobile number to open the dashboard.'
+      );
       if (data.checkoutUrl && typeof window !== 'undefined') {
         sessionStorage.setItem('aischool_signup_id', data.leadId ?? '');
       }
     } catch (e) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('aischool_signup_pending', JSON.stringify(payload));
+        registerPhoneAccount({
+          id: `user_signup_${phone.replace(/\D/g, '').slice(-10)}`,
+          name: adminName,
+          phone,
+          role: 'school_admin',
+        });
         setSavedLocally(true);
-        setStep(5);
+        setPaymentSaved({ last4: paymentMethod.last4, brand: paymentMethod.brand });
+        setStep(6);
+        notify.warning(
+          'Saved on this device',
+          `${schoolName} registration is stored locally.`,
+          'Use the same browser to sign in. Connect the server for cloud sync.'
+        );
         setError('');
         return;
       }
+      notify.error(
+        'Registration failed',
+        e instanceof Error ? e.message : 'Could not complete signup.',
+        'Check your details and try again, or contact support.'
+      );
       setError(e instanceof Error ? e.message : 'Error saving signup');
     } finally {
       setLoading(false);
@@ -142,13 +204,14 @@ export function SignupWizard() {
   }
 
   const progress = ((step + 1) / STEPS.length) * 100;
-  const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3001';
+  const marketingUrl = getMarketingUrl();
 
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900">
-        <strong>{APP_NAME}</strong> — {TRIAL_DAYS}-day free trial (self-service, not a sales demo). After{' '}
-        {TRIAL_DAYS} days your selected plan billing starts automatically unless you cancel in admin settings.
+        <strong>{APP_NAME}</strong> — {TRIAL_DAYS}-day free trial. Add a valid debit/credit card now (no charge today).
+        After {TRIAL_DAYS} days, your plan amount is charged <strong>in advance</strong> every month or year from the
+        same card unless you cancel in admin billing.
       </div>
 
       <div className="mb-8" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
@@ -222,23 +285,20 @@ export function SignupWizard() {
                 />
               </label>
               <div className="grid gap-4 sm:grid-cols-2 mt-4">
-                <label className="block">
-                  <span className="text-sm font-medium">City</span>
-                  <input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium">Board / curriculum</span>
-                  <input
-                    value={board}
-                    onChange={(e) => setBoard(e.target.value)}
-                    placeholder="CBSE, ICSE, IB…"
-                    className="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"
-                  />
-                </label>
+                <SelectField
+                  id="signup-city"
+                  label="City"
+                  value={city}
+                  onChange={setCity}
+                  options={CITIES.map((c) => ({ value: c, label: c }))}
+                />
+                <SelectField
+                  id="signup-board"
+                  label="Board / curriculum"
+                  value={board}
+                  onChange={setBoard}
+                  options={BOARDS.map((b) => ({ value: b, label: b }))}
+                />
               </div>
               <label className="block mt-4">
                 <span className="text-sm font-medium">School website (optional)</span>
@@ -400,8 +460,11 @@ export function SignupWizard() {
                   trial — we do not offer separate demo accounts.
                 </p>
                 <p>
-                  <strong>After trial:</strong> Billing starts automatically on day {TRIAL_DAYS + 1} unless you
-                  cancel from admin billing settings.
+                  <strong>Payment:</strong> Debit or credit card required on the next step. No charge during trial.
+                </p>
+                <p>
+                  <strong>After trial:</strong> {formatCurrency(quote.totalAmount, currency)} charged in advance on
+                  day {TRIAL_DAYS + 1}, then each {interval === 'yearly' ? 'year' : 'month'} until canceled.
                 </p>
               </div>
               <label className="flex gap-2 mt-4 text-sm cursor-pointer">
@@ -434,6 +497,29 @@ export function SignupWizard() {
           )}
 
           {step === 4 && (
+            <>
+              <h2 className="text-xl font-semibold">Payment method</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Required to start your trial. Same card is used for subscription after {TRIAL_DAYS} days.
+              </p>
+              <div className="mt-6">
+                <PaymentMethodForm
+                  currency={currency}
+                  interval={interval}
+                  amount={quote.totalAmount}
+                  value={paymentInput}
+                  onChange={setPaymentInput}
+                />
+              </div>
+              {error && (
+                <p className="mt-4 text-sm text-red-600 flex gap-1" role="alert">
+                  <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+                </p>
+              )}
+            </>
+          )}
+
+          {step === 5 && (
             <>
               <h2 className="text-xl font-semibold">School admin account</h2>
               <p className="mt-1 text-sm text-slate-500">OTP login — no password</p>
@@ -483,7 +569,7 @@ export function SignupWizard() {
             </>
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <div className="text-center py-6">
               <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                 <Check className="h-8 w-8" />
@@ -491,31 +577,50 @@ export function SignupWizard() {
               <h2 className="mt-4 text-2xl font-bold">Welcome to {APP_NAME}</h2>
               <p className="mt-2 text-slate-600">
                 <strong>{schoolName}</strong> is registered. Your {TRIAL_DAYS}-day trial is active.
+                {paymentSaved && (
+                  <>
+                    {' '}
+                    Card •••• {paymentSaved.last4} is on file for billing after trial.
+                  </>
+                )}
                 {savedLocally
-                  ? ' Your registration is saved in this browser. Connect the live server to complete account activation.'
-                  : ' Log in with OTP to complete setup.'}
+                  ? ' Registration saved in this browser — use the same browser for admin login.'
+                  : ' Log in with OTP to open your dashboard.'}
               </p>
-              <Button className="mt-6" onClick={() => (window.location.href = adminUrl)}>
-                Open admin dashboard
+              <Button
+                className="mt-6"
+                href={`${marketingUrl}/login?phone=${encodeURIComponent(phone)}&trial=1`}
+              >
+                Sign in to your dashboard
               </Button>
             </div>
           )}
 
-          {step < 5 && (
+          {step < 6 && (
             <div className="mt-8 flex gap-3">
               {step > 0 && (
-                <Button variant="secondary" onClick={() => setStep((s) => s - 1)} className="gap-1">
+                <Button variant="secondary" onClick={() => { setError(''); setStep((s) => s - 1); }} className="gap-1">
                   <ArrowLeft className="h-4 w-4" /> Back
                 </Button>
               )}
-              {step < 4 ? (
+              {step < 5 ? (
                 <Button
                   className="flex-1"
                   disabled={
                     (step === 0 && !schoolName.trim()) ||
                     (step === 3 && (!acceptedTerms || !acceptedAutoRenew))
                   }
-                  onClick={() => setStep((s) => s + 1)}
+                  onClick={() => {
+                    if (step === 4) {
+                      const err = validatePaymentMethod(paymentInput);
+                      if (err) {
+                        setError(err);
+                        return;
+                      }
+                      setError('');
+                    }
+                    setStep((s) => s + 1);
+                  }}
                 >
                   Continue <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>

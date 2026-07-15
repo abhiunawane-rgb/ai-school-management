@@ -1,0 +1,19 @@
+# Apache rules for Next.js static export on BigRock shared hosting
+Options -MultiViews
+RewriteEngine On
+RewriteBase /
+
+# Serve existing files and directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Trailing slash for directory-style routes (Next export uses /page/index.html)
+RewriteCond %{REQUEST_URI} !/$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ $1/ [L,R=301]
+
+# Fallback to index.html inside folder
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+)/$ $1/index.html [L]

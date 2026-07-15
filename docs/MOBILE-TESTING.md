@@ -6,6 +6,9 @@
 |------|--------|
 | Dart code (role-based UI) | Ready |
 | Teacher / Parent / Driver / Student / Admin homes | Ready (demo mode) |
+| Attendance (per role) | Ready — my record, % summary, teacher class marking |
+| Leave requests | Ready — apply leave, pending/approved/rejected |
+| Holiday calendar | Ready — month view + upcoming holidays |
 | School profile screen | Ready |
 | Bus tracking map | Ready (needs Google Maps API key on device) |
 | AI chat | UI placeholder |
@@ -87,11 +90,11 @@ You will see a **role-specific home screen** with that user’s menu items.
 
 | Role | What you can test |
 |------|-------------------|
-| **School Admin** | School profile, links to web admin for billing/invites |
-| **Teacher** | Attendance, homework, notices, AI chat |
-| **Parent** | Fees, bus tracking, homework, AI chat |
-| **Driver** | Bus GPS screen (update location demo) |
-| **Student** | Timetable, homework, classes, AI chat |
+| **School Admin** | Holiday calendar, attendance overview, leave list, school profile |
+| **Teacher** | Mark class attendance, my attendance %, apply leave, holidays |
+| **Parent** | Child attendance & leave, holiday calendar, bus tracking, AI chat |
+| **Driver** | Duty attendance log, apply leave, holidays, bus GPS |
+| **Student** | My attendance %, apply leave, holiday calendar, AI chat |
 
 Tap the **school icon** (top right) → **School profile** (name, address, principal).
 

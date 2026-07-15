@@ -4,3 +4,8 @@ export * from './permissions/index.js';
 export * from './subscription/index.js';
 export * from './features/index.js';
 export * from './student-auth-rules.js';
+export * from './auth/user-directory.js';
+export * from './notifications/action-feedback.js';
+export * from './academy/school-options.js';
+export * from './ai/school-snapshot.js';
+export * from './ai/local-assistant.js';

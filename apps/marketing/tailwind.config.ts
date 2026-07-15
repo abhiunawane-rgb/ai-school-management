@@ -36,6 +36,7 @@ const config: Config = {
       animation: {
         'fade-up': 'fadeUp 0.6s ease-out forwards',
         float: 'float 6s ease-in-out infinite',
+        'float-slow': 'float 8s ease-in-out infinite',
         'pulse-soft': 'pulseSoft 3s ease-in-out infinite',
       },
       keyframes: {

@@ -110,42 +110,47 @@ class _RoleBody extends StatelessWidget {
       case UserRole.subAdmin:
         return [
           _HomeItem('School profile', Icons.school, '/school-profile'),
-          _HomeItem('Team invites', Icons.group_add, null, hint: 'Use web admin'),
-          _HomeItem('Subscription', Icons.payments, null, hint: 'Web admin :3001'),
-          _HomeItem('Reports', Icons.analytics, null),
+          _HomeItem('Holiday calendar', Icons.calendar_month, '/holidays'),
+          _HomeItem('Attendance', Icons.fact_check, '/attendance', hint: 'School overview'),
+          _HomeItem('Leave requests', Icons.beach_access, '/leaves'),
+          _HomeItem('Team invites', Icons.group_add, null, hint: 'Web admin portal'),
+          _HomeItem('Subscription', Icons.payments, null, hint: 'Web admin portal'),
         ];
       case UserRole.teacher:
         return [
-          _HomeItem('Mark attendance', Icons.fact_check, null),
-          _HomeItem('Homework', Icons.assignment, null),
-          _HomeItem('Notices', Icons.campaign, null),
-          _HomeItem('Results', Icons.bar_chart, null),
+          _HomeItem('Attendance', Icons.fact_check, '/attendance', hint: 'My record & mark class'),
+          _HomeItem('Apply leave', Icons.beach_access, '/leaves'),
+          _HomeItem('Holiday calendar', Icons.calendar_month, '/holidays'),
+          _HomeItem('Homework', Icons.assignment, '/homework'),
+          _HomeItem('Notices', Icons.campaign, '/notices'),
           _HomeItem('AI assistant', Icons.smart_toy, '/ai-chat'),
-          _HomeItem('Online class', Icons.video_call, null),
         ];
       case UserRole.parent:
         return [
-          _HomeItem('Child attendance', Icons.fact_check, null),
-          _HomeItem('Fees & pay', Icons.payments, null),
-          _HomeItem('Homework', Icons.assignment, null),
+          _HomeItem('Child attendance', Icons.fact_check, '/attendance'),
+          _HomeItem('Child leave', Icons.beach_access, '/leaves'),
+          _HomeItem('Holiday calendar', Icons.calendar_month, '/holidays'),
+          _HomeItem('Fees & pay', Icons.payments, '/fees'),
           _HomeItem('Bus tracking', Icons.directions_bus, '/bus-tracking'),
-          _HomeItem('Notices', Icons.notifications, null),
           _HomeItem('AI assistant', Icons.smart_toy, '/ai-chat'),
         ];
       case UserRole.student:
         return [
-          _HomeItem('Timetable', Icons.schedule, null),
-          _HomeItem('Homework', Icons.assignment, null),
-          _HomeItem('Results', Icons.bar_chart, null),
-          _HomeItem('Online class', Icons.video_call, null),
+          _HomeItem('My attendance', Icons.fact_check, '/attendance'),
+          _HomeItem('Apply leave', Icons.beach_access, '/leaves'),
+          _HomeItem('Holiday calendar', Icons.calendar_month, '/holidays'),
+          _HomeItem('Timetable', Icons.schedule, '/timetable'),
+          _HomeItem('Homework', Icons.assignment, '/homework'),
           _HomeItem('AI assistant', Icons.smart_toy, '/ai-chat'),
         ];
       case UserRole.driver:
         return [
+          _HomeItem('Duty attendance', Icons.fact_check, '/attendance'),
+          _HomeItem('Apply leave', Icons.beach_access, '/leaves'),
+          _HomeItem('Holiday calendar', Icons.calendar_month, '/holidays'),
           _HomeItem('Update bus GPS', Icons.gps_fixed, '/bus-tracking', hint: 'Live location'),
-          _HomeItem('My route', Icons.route, null),
-          _HomeItem('Student list', Icons.people, null),
-          _HomeItem('Emergency', Icons.warning_amber, null),
+          _HomeItem('My route', Icons.route, '/driver-route'),
+          _HomeItem('Emergency', Icons.warning_amber, '/emergency'),
         ];
     }
   }

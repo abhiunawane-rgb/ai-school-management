@@ -1,6 +1,11 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Privacy Policy' };
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'Privacy Policy for AI School Management — how we handle school, staff, and parent data.',
+  alternates: { canonical: '/privacy/' },
+  robots: { index: true, follow: true },
+};
 
 export default function PrivacyPage() {
   return (

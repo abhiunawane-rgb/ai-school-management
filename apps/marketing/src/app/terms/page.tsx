@@ -1,6 +1,11 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Terms of Use' };
+export const metadata: Metadata = {
+  title: 'Terms of Use',
+  description: 'Terms of Use for AI School Management school ERP software and free trial.',
+  alternates: { canonical: '/terms/' },
+  robots: { index: true, follow: true },
+};
 
 export default function TermsPage() {
   return (

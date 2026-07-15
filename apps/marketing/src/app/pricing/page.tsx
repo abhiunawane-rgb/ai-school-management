@@ -4,8 +4,14 @@ import { CtaBanner } from '@/components/sections/cta-banner';
 import { APP_NAME, TRIAL_DAYS } from '@/lib/pricing-data';
 
 export const metadata: Metadata = {
-  title: 'Pricing',
-  description: `Flexible plans and optional modules. ${TRIAL_DAYS}-day free trial on ${APP_NAME}.`,
+  title: 'School ERP pricing calculator — INR, USD, EUR, GBP, AED',
+  description: `Transparent school management pricing by student count. Monthly or yearly plans with optional modules. ${TRIAL_DAYS}-day free trial on ${APP_NAME}.`,
+  alternates: { canonical: '/pricing/' },
+  openGraph: {
+    title: 'Pricing & plan calculator | AI School Management',
+    description: 'Calculate school ERP cost by students, staff, and add-ons. Multi-currency billing.',
+    url: '/pricing/',
+  },
 };
 
 export default function PricingPage() {

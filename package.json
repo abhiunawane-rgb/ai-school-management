@@ -9,6 +9,7 @@
     "dev": "turbo run dev",
     "dev:clean": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-clean.ps1",
     "dev:web": "turbo run dev --filter=@ai-school/marketing --filter=@ai-school/admin",
+    "build:bigrock": "powershell -ExecutionPolicy Bypass -File ./scripts/build-bigrock-all.ps1",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",

@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { FadeIn } from '@/components/motion';
+import { Icon3D } from '@/components/ui/icon-3d';
 import { APP_NAME } from '@/lib/pricing-data';
 import {
   Bus,
@@ -14,12 +16,12 @@ import {
 } from 'lucide-react';
 
 const features = [
-  { icon: Calendar, title: 'Attendance & timetable', color: 'bg-blue-100 text-blue-700' },
-  { icon: CreditCard, title: 'Fees & payments', color: 'bg-emerald-100 text-emerald-700' },
-  { icon: Bus, title: 'Bus tracking', color: 'bg-amber-100 text-amber-700' },
-  { icon: Brain, title: 'AI assistant', color: 'bg-violet-100 text-violet-700' },
-  { icon: MessageSquare, title: 'Social feed & events', color: 'bg-pink-100 text-pink-700' },
-  { icon: BarChart3, title: 'Analytics & reports', color: 'bg-slate-100 text-slate-700' },
+  { icon: Calendar, title: 'Attendance & timetable', color: 'bg-blue-100 text-blue-700', href: '/features#attendance' },
+  { icon: CreditCard, title: 'Fees & payments', color: 'bg-emerald-100 text-emerald-700', href: '/features#fees' },
+  { icon: Bus, title: 'Bus tracking', color: 'bg-amber-100 text-amber-700', href: '/features#transport' },
+  { icon: Brain, title: 'AI assistant', color: 'bg-violet-100 text-violet-700', href: '/features#ai' },
+  { icon: MessageSquare, title: 'Social feed & events', color: 'bg-pink-100 text-pink-700', href: '/features#communication' },
+  { icon: BarChart3, title: 'Analytics & reports', color: 'bg-slate-100 text-slate-700', href: '/features#analytics' },
 ];
 
 export function FeaturesPreview() {
@@ -45,14 +47,22 @@ export function FeaturesPreview() {
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f, i) => (
             <FadeIn key={f.title} delay={i * 0.05}>
-              <article className="group flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-card-hover transition-all">
-                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${f.color}`}>
-                  <f.icon className="h-5 w-5" aria-hidden />
-                </span>
-                <h3 className="font-semibold text-slate-900 group-hover:text-brand-700 transition-colors pt-2">
-                  {f.title}
-                </h3>
-              </article>
+              <motion.article
+                whileHover={{ y: -4 }}
+                className="group flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-card-hover transition-all h-full"
+              >
+                <Link href={f.href} className="flex gap-4 flex-1 min-h-11">
+                  <Icon3D icon={f.icon} className={f.color} size="sm" />
+                  <div className="pt-1">
+                    <h3 className="font-semibold text-slate-900 group-hover:text-brand-700 transition-colors">
+                      {f.title}
+                    </h3>
+                    <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Learn more <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
+                </Link>
+              </motion.article>
             </FadeIn>
           ))}
         </div>
