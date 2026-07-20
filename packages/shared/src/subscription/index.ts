@@ -17,7 +17,7 @@ export interface PriceCalculatorInput {
   yearlyDiscountPercent?: number;
 }
 
-const YEARLY_DISCOUNT_DEFAULT = 15;
+const YEARLY_DISCOUNT_DEFAULT = 20;
 
 function findSlabPrice(slabs: StudentSlab[], count: number): number {
   const slab = slabs.find(
@@ -31,7 +31,8 @@ function findSlabPrice(slabs: StudentSlab[], count: number): number {
 }
 
 /**
- * Live price calculator with student slab + feature toggle pricing
+ * Live price calculator with student slab + feature toggle pricing.
+ * Plan.basePrice (when set) overrides country base so tiers can ascend.
  */
 export function calculateSubscriptionPrice(input: PriceCalculatorInput): PriceQuote {
   const {
@@ -50,8 +51,8 @@ export function calculateSubscriptionPrice(input: PriceCalculatorInput): PriceQu
   const breakdown: PriceBreakdownItem[] = [];
   const { currency } = countryPricing;
 
-  let baseAmount = countryPricing.basePrice;
-  breakdown.push({ label: `${plan.name} base`, amount: baseAmount, type: 'base' });
+  let baseAmount = plan.basePrice ?? countryPricing.basePrice;
+  breakdown.push({ label: `${plan.name} platform fee`, amount: baseAmount, type: 'base' });
 
   const studentAmount = findSlabPrice(slabs, studentCount);
   breakdown.push({
@@ -79,7 +80,7 @@ export function calculateSubscriptionPrice(input: PriceCalculatorInput): PriceQu
   const taxRate = countryPricing.taxRate ?? 0;
   const taxAmount = Math.round(subtotal * taxRate * 100) / 100;
   if (taxAmount > 0) {
-    breakdown.push({ label: 'Tax', amount: taxAmount, type: 'tax' });
+    breakdown.push({ label: 'GST', amount: taxAmount, type: 'tax' });
   }
 
   const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;

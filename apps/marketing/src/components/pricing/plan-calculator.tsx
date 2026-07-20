@@ -11,8 +11,11 @@ import {
   FEATURE_LABELS,
   getQuote,
   getAddonPrice,
+  getAddonListPrice,
+  getPlanStudentFromPrice,
   isFeatureIncluded,
   TRIAL_DAYS,
+  YEARLY_SAVE_PERCENT,
   APP_NAME,
   type CurrencyCode,
 } from '@/lib/pricing-data';
@@ -78,13 +81,14 @@ export function PlanCalculator({ compact = false }: { compact?: boolean }) {
                   className="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 text-sm"
                 >
                   <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly (save 15%)</option>
+                  <option value="yearly">Yearly (save {YEARLY_SAVE_PERCENT}%)</option>
                 </select>
               </label>
             </div>
             <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-1">
               {PLANS.map((p) => {
                 const selected = planId === p.id;
+                const from = getPlanStudentFromPrice(p.id, currency);
                 return (
                   <button
                     key={p.id}
@@ -97,11 +101,17 @@ export function PlanCalculator({ compact = false }: { compact?: boolean }) {
                         : 'border-slate-200 bg-white hover:border-brand-300'
                     )}
                   >
-                    {p.id === 'growth' && (
-                      <span className="absolute -top-2.5 left-4 rounded-full bg-accent-amber px-2 py-0.5 text-xs font-bold text-white">
-                        Popular
+                    {p.badge ? (
+                      <span
+                        className={cn(
+                          'absolute -top-2.5 left-4 rounded-full px-2 py-0.5 text-xs font-bold text-white',
+                          p.id === 'growth' ? 'bg-accent-amber' : 'bg-brand-600'
+                        )}
+                      >
+                        {p.badge}
+                        {p.discountPercent ? ` · ${p.discountPercent}% off` : ''}
                       </span>
-                    )}
+                    ) : null}
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <p className="font-semibold text-lg text-slate-900">{p.name}</p>
                       {selected && (
@@ -109,6 +119,24 @@ export function PlanCalculator({ compact = false }: { compact?: boolean }) {
                       )}
                     </div>
                     <p className="mt-1 text-sm text-slate-500">{p.description}</p>
+                    <p className="mt-3 flex flex-wrap items-baseline gap-2">
+                      <span className="text-sm text-slate-400 line-through tabular-nums">
+                        {formatCurrency(from.list, currency)}/student
+                      </span>
+                      <span className="text-base font-bold text-brand-700 tabular-nums">
+                        from {formatCurrency(from.offer, currency)}
+                        <span className="text-sm font-medium text-slate-600">/student/mo</span>
+                      </span>
+                    </p>
+                    {p.listBasePrice && p.basePrice ? (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Platform fee{' '}
+                        <span className="line-through">{formatCurrency(p.listBasePrice, currency)}</span>{' '}
+                        <span className="font-semibold text-slate-800">
+                          {formatCurrency(p.basePrice, currency)}/mo
+                        </span>
+                      </p>
+                    ) : null}
                     <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Included in {p.name}
                     </p>
@@ -172,6 +200,7 @@ export function PlanCalculator({ compact = false }: { compact?: boolean }) {
                 {optionalFeatures.map((f) => {
                   const on = addons.includes(f);
                   const price = getAddonPrice(f, currency, planId);
+                  const listPrice = getAddonListPrice(f, currency, planId);
                   const meta = FEATURE_LABELS[f];
                   return (
                     <button
@@ -196,8 +225,13 @@ export function PlanCalculator({ compact = false }: { compact?: boolean }) {
                         </span>
                         <span className="flex-1">
                           <span className="font-medium text-slate-900">{meta.label}</span>
-                          <span className="block text-xs text-brand-700 font-semibold mt-0.5">
-                            +{formatCurrency(price, currency)}/month
+                          <span className="block text-xs mt-0.5">
+                            <span className="text-slate-400 line-through mr-1.5 tabular-nums">
+                              {formatCurrency(listPrice, currency)}
+                            </span>
+                            <span className="text-brand-700 font-semibold tabular-nums">
+                              +{formatCurrency(price, currency)}/month
+                            </span>
                           </span>
                           <span className="block text-xs text-slate-500 mt-1">{meta.desc}</span>
                           <span className="block text-xs text-slate-400 italic mt-0.5">
@@ -223,12 +257,24 @@ export function PlanCalculator({ compact = false }: { compact?: boolean }) {
             <Sparkles className="h-5 w-5" />
             <span className="text-sm font-semibold">Live estimate — {APP_NAME}</span>
           </div>
-          <p className="mt-4 text-4xl font-bold text-slate-900 tabular-nums">
+          {'listTotalAmount' in quote && quote.listTotalAmount > quote.totalAmount ? (
+            <p className="mt-3 text-lg text-slate-400 line-through tabular-nums">
+              {formatCurrency(quote.listTotalAmount, currency)}
+              <span className="text-sm font-normal">/{interval === 'yearly' ? 'year' : 'month'}</span>
+            </p>
+          ) : null}
+          <p className="mt-1 text-4xl font-bold text-slate-900 tabular-nums">
             {formatCurrency(quote.totalAmount, currency)}
             <span className="text-lg font-normal text-slate-500">
               /{interval === 'yearly' ? 'year' : 'month'}
             </span>
           </p>
+          {'savingsAmount' in quote && quote.savingsAmount > 0 ? (
+            <p className="mt-1 text-sm font-semibold text-emerald-700">
+              You save {formatCurrency(quote.savingsAmount, currency)} vs market list
+              {interval === 'yearly' ? ` · plus ${YEARLY_SAVE_PERCENT}% yearly billing` : ''}
+            </p>
+          ) : null}
           <p className="mt-1 text-sm text-slate-500">
             {students} students · {teachers} staff · {plan.name} plan
             {addons.length > 0 && ` · ${addons.length} add-on(s)`}

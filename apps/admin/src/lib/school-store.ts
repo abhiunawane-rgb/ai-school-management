@@ -684,23 +684,39 @@ export function addSchoolEvent(
 
 export function addCommunityPost(
   state: SchoolState,
-  item: Omit<CommunityPost, 'id' | 'createdAt' | 'likes'>
+  item: Omit<CommunityPost, 'id' | 'createdAt' | 'likes' | 'likedBy'>
 ): SchoolState {
   const entry: CommunityPost = {
     ...item,
     id: `fp_${Date.now()}`,
     createdAt: new Date().toISOString(),
     likes: 0,
+    likedBy: [],
   };
   const next = { ...state, feed: [entry, ...(state.feed ?? [])] };
   saveSchoolState(next);
   return next;
 }
 
-export function likeCommunityPost(state: SchoolState, postId: string): SchoolState {
+/** One like per user — repeat clicks do not increase the count. */
+export function likeCommunityPost(
+  state: SchoolState,
+  postId: string,
+  userId?: string
+): SchoolState {
+  const uid = userId ?? state.currentUser.id;
   const next = {
     ...state,
-    feed: (state.feed ?? []).map((p) => (p.id === postId ? { ...p, likes: p.likes + 1 } : p)),
+    feed: (state.feed ?? []).map((p) => {
+      if (p.id !== postId) return p;
+      const likedBy = p.likedBy ?? [];
+      if (likedBy.includes(uid)) return p;
+      return {
+        ...p,
+        likes: p.likes + 1,
+        likedBy: [...likedBy, uid],
+      };
+    }),
   };
   saveSchoolState(next);
   return next;

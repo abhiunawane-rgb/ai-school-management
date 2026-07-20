@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
 import { FormField } from '@/components/ui/form-field';
 import { SelectField } from '@/components/ui/select-field';
+import { cn } from '@/lib/utils';
 
 type Tab = 'feed' | 'events';
 
@@ -265,10 +266,27 @@ export default function CommunityFeedPage() {
               </div>
               <button
                 type="button"
-                onClick={() => update(likeCommunityPost(state, post.id))}
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-800"
+                onClick={() => update(likeCommunityPost(state, post.id, state.currentUser.id))}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium',
+                  (post.likedBy ?? []).includes(state.currentUser.id)
+                    ? 'bg-brand-50 text-brand-800'
+                    : 'text-slate-600 hover:bg-brand-50 hover:text-brand-800'
+                )}
+                aria-pressed={(post.likedBy ?? []).includes(state.currentUser.id)}
+                title={
+                  (post.likedBy ?? []).includes(state.currentUser.id)
+                    ? 'You already liked this'
+                    : 'Like this post'
+                }
               >
-                <Heart className="h-3.5 w-3.5" aria-hidden />
+                <Heart
+                  className={cn(
+                    'h-3.5 w-3.5',
+                    (post.likedBy ?? []).includes(state.currentUser.id) && 'fill-brand-600 text-brand-600'
+                  )}
+                  aria-hidden
+                />
                 {post.likes} likes
               </button>
             </li>

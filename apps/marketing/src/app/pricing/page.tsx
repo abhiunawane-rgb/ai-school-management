@@ -23,9 +23,9 @@ export default function PricingPage() {
             {APP_NAME} pricing
           </h1>
           <p className="mt-4 text-lg text-slate-600">
-            Select currency, compare every feature, add paid modules, and see your live total.{' '}
-            {TRIAL_DAYS}-day self-service trial — subscription starts automatically after trial unless
-            canceled.
+            Market-aligned pricing that rises with each plan — Starter, Growth, then Enterprise — with launch
+            discounts vs list rates. Add paid modules as needed. {TRIAL_DAYS}-day self-service trial; billing
+            starts after trial unless you cancel.
           </p>
         </div>
       </section>

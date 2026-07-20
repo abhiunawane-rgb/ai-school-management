@@ -204,6 +204,8 @@ export interface CommunityPost {
   body: string;
   createdAt: string;
   likes: number;
+  /** User IDs who already liked — one like per user */
+  likedBy?: string[];
   pinned: boolean;
 }
 

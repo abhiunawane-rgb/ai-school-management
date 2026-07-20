@@ -4,8 +4,19 @@ import { calculateSubscriptionPrice } from '@ai-school/shared/subscription';
 
 export const TRIAL_DAYS = 7;
 export const APP_NAME = 'AI School Management';
+/** Annual billing discount vs paying monthly */
+export const YEARLY_SAVE_PERCENT = 20;
 
-/** Currency selector — maps to internal country pricing */
+/**
+ * Market research (India school ERP / SaaS, 2025–26):
+ * - Typical cloud SMS: ₹8–₹25 / student / month (annual billing)
+ * - Mid CBSE schools often pay ₹50k–₹1.5L / year all-in
+ * - Competitors cluster ~₹10–₹22 / student with add-on modules
+ *
+ * Our tiers ASCEND (Starter → Growth → Enterprise) — never cheaper at the top.
+ * "List" = market rack rate; "offer" = launch discount to convert schools.
+ */
+
 export const CURRENCIES = [
   { code: 'INR', label: 'INR — Indian Rupee (₹)', countryCode: 'IN' },
   { code: 'USD', label: 'USD — US Dollar ($)', countryCode: 'US' },
@@ -20,7 +31,6 @@ export function currencyToCountry(currency: string): string {
   return CURRENCIES.find((c) => c.code === currency)?.countryCode ?? 'IN';
 }
 
-/** India (INR) is the pricing source — other currencies are converted, not repriced higher */
 export const INR_EXCHANGE_RATES: Record<CurrencyCode, number> = {
   INR: 1,
   USD: 1 / 83,
@@ -39,7 +49,11 @@ export const PLANS: Plan[] = [
   {
     id: 'starter',
     name: 'Starter',
-    description: 'Essential tools for small schools (up to ~300 students)',
+    description: 'Essentials for small schools & new campuses (up to ~300 students)',
+    badge: 'Launch offer',
+    discountPercent: 30,
+    basePrice: 2999,
+    listBasePrice: 4299,
     includedFeatures: [
       'attendance',
       'notices',
@@ -49,16 +63,20 @@ export const PLANS: Plan[] = [
       'push_notifications',
     ] as FeatureKey[],
     defaultStudentSlabs: [
-      { minStudents: 0, maxStudents: 100, pricePerStudent: 15 },
-      { minStudents: 101, maxStudents: 300, pricePerStudent: 12 },
-      { minStudents: 301, maxStudents: null, pricePerStudent: 10 },
+      { minStudents: 0, maxStudents: 100, pricePerStudent: 18, listPricePerStudent: 26 },
+      { minStudents: 101, maxStudents: 300, pricePerStudent: 15, listPricePerStudent: 22 },
+      { minStudents: 301, maxStudents: null, pricePerStudent: 12, listPricePerStudent: 18 },
     ],
     isPublic: true,
   },
   {
     id: 'growth',
     name: 'Growth',
-    description: 'Full academic suite for growing schools',
+    description: 'Full academic + fees + community — best for growing CBSE/ICSE schools',
+    badge: 'Most popular',
+    discountPercent: 28,
+    basePrice: 5999,
+    listBasePrice: 8499,
     includedFeatures: [
       'attendance',
       'notices',
@@ -74,38 +92,59 @@ export const PLANS: Plan[] = [
       'reports',
     ] as FeatureKey[],
     defaultStudentSlabs: [
-      { minStudents: 0, maxStudents: 500, pricePerStudent: 12 },
-      { minStudents: 501, maxStudents: 1500, pricePerStudent: 9 },
-      { minStudents: 1501, maxStudents: null, pricePerStudent: 7 },
+      { minStudents: 0, maxStudents: 500, pricePerStudent: 24, listPricePerStudent: 34 },
+      { minStudents: 501, maxStudents: 1500, pricePerStudent: 20, listPricePerStudent: 28 },
+      { minStudents: 1501, maxStudents: null, pricePerStudent: 16, listPricePerStudent: 24 },
     ],
     isPublic: true,
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
-    description: 'All modules including AI, bus GPS, WhatsApp & analytics',
+    description: 'Everything unlocked — AI assistant, bus GPS, WhatsApp, analytics & priority support',
+    badge: 'All modules',
+    discountPercent: 25,
+    basePrice: 12999,
+    listBasePrice: 17999,
     includedFeatures: [...FEATURE_KEYS],
     defaultStudentSlabs: [
-      { minStudents: 0, maxStudents: 1000, pricePerStudent: 8 },
-      { minStudents: 1001, maxStudents: null, pricePerStudent: 5 },
+      { minStudents: 0, maxStudents: 1000, pricePerStudent: 35, listPricePerStudent: 48 },
+      { minStudents: 1001, maxStudents: null, pricePerStudent: 28, listPricePerStudent: 40 },
     ],
     isPublic: true,
   },
 ];
 
+/** Offer (billed) add-on prices INR / month */
 const BASE_FEATURE_PRICES_INR: Partial<Record<FeatureKey, number>> = {
-  results: 399,
-  fees: 499,
-  social_feed: 299,
-  events: 249,
-  photo_gallery: 299,
-  bus_tracking: 1499,
-  ai_chatbot: 999,
-  online_classes: 799,
-  analytics: 599,
-  reports: 349,
-  whatsapp_alerts: 499,
-  ai_translations: 399,
+  results: 499,
+  fees: 599,
+  social_feed: 399,
+  events: 349,
+  photo_gallery: 399,
+  bus_tracking: 1999,
+  ai_chatbot: 1499,
+  online_classes: 999,
+  analytics: 799,
+  reports: 449,
+  whatsapp_alerts: 699,
+  ai_translations: 499,
+};
+
+/** Market list prices for add-ons (strikethrough) */
+const FEATURE_LIST_PRICES_INR: Partial<Record<FeatureKey, number>> = {
+  results: 799,
+  fees: 899,
+  social_feed: 599,
+  events: 499,
+  photo_gallery: 599,
+  bus_tracking: 2999,
+  ai_chatbot: 2499,
+  online_classes: 1499,
+  analytics: 1199,
+  reports: 699,
+  whatsapp_alerts: 999,
+  ai_translations: 799,
 };
 
 export const FEATURE_LABELS: Record<
@@ -204,31 +243,50 @@ export const FEATURE_LABELS: Record<
   },
 };
 
-/** India pricing — sole source for all currencies */
 export const COUNTRY_PRICING: Record<string, CountryPricing> = {
   IN: {
     countryCode: 'IN',
     currency: 'INR',
-    basePrice: 4999,
+    basePrice: 2999,
     taxRate: 0.18,
     paymentProvider: 'razorpay',
     studentSlabs: [],
     featurePrices: { ...BASE_FEATURE_PRICES_INR },
+    featureListPrices: { ...FEATURE_LIST_PRICES_INR },
   },
 };
 
-const MIN_ADDON_INR = 299;
+const MIN_ADDON_INR = 349;
 
 export function getAddonPrice(feature: FeatureKey, currency: string, planId: string): number {
   const plan = PLANS.find((p) => p.id === planId);
   if (plan?.includedFeatures.includes(feature)) return 0;
+  const inr = COUNTRY_PRICING.IN.featurePrices[feature] ?? MIN_ADDON_INR;
+  return convertFromInr(inr, currency as CurrencyCode);
+}
+
+export function getAddonListPrice(feature: FeatureKey, currency: string, planId: string): number {
+  const plan = PLANS.find((p) => p.id === planId);
+  if (plan?.includedFeatures.includes(feature)) return 0;
   const inr =
-    COUNTRY_PRICING.IN.featurePrices[feature] ?? MIN_ADDON_INR;
+    COUNTRY_PRICING.IN.featureListPrices?.[feature] ??
+    Math.round((COUNTRY_PRICING.IN.featurePrices[feature] ?? MIN_ADDON_INR) * 1.5);
   return convertFromInr(inr, currency as CurrencyCode);
 }
 
 export function isFeatureIncluded(planId: string, feature: FeatureKey): boolean {
   return PLANS.find((p) => p.id === planId)?.includedFeatures.includes(feature) ?? false;
+}
+
+/** Headline “from ₹X/student” offer + list for a plan card */
+export function getPlanStudentFromPrice(planId: string, currency: CurrencyCode = 'INR') {
+  const plan = PLANS.find((p) => p.id === planId);
+  const slab = plan?.defaultStudentSlabs[0];
+  if (!slab) return { offer: 0, list: 0 };
+  return {
+    offer: convertFromInr(slab.pricePerStudent, currency),
+    list: convertFromInr(slab.listPricePerStudent ?? Math.round(slab.pricePerStudent * 1.4), currency),
+  };
 }
 
 export function getQuote(
@@ -250,16 +308,45 @@ export function getQuote(
     studentCount,
     enabledFeatures: enabledAddons,
     billingInterval,
+    yearlyDiscountPercent: YEARLY_SAVE_PERCENT,
   });
+
+  // List (pre-discount) estimate for strikethrough — same mix, list rates, no yearly promo
+  const listSlabs = plan.defaultStudentSlabs.map((s) => ({
+    ...s,
+    pricePerStudent: s.listPricePerStudent ?? Math.round(s.pricePerStudent * 1.4),
+  }));
+  const listQuoteInr = calculateSubscriptionPrice({
+    plan: {
+      ...plan,
+      basePrice: plan.listBasePrice ?? Math.round((plan.basePrice ?? 2999) * 1.4),
+      defaultStudentSlabs: listSlabs,
+    },
+    countryPricing: {
+      ...COUNTRY_PRICING.IN,
+      currency: 'INR',
+      featurePrices: { ...FEATURE_LIST_PRICES_INR },
+    },
+    studentCount,
+    enabledFeatures: enabledAddons,
+    billingInterval: 'monthly',
+    yearlyDiscountPercent: 0,
+  });
+  const listMonthlyInr = Math.round(listQuoteInr.totalAmount * staffMultiplier);
+  const listComparableInr =
+    billingInterval === 'yearly' ? Math.round(listMonthlyInr * 12) : listMonthlyInr;
 
   const totalInr = Math.round(quoteInr.totalAmount * staffMultiplier);
   const convert = (amount: number) => convertFromInr(amount, code);
+  const savingsInr = Math.max(0, listComparableInr - totalInr);
 
   if (code === 'INR') {
     return {
       ...quoteInr,
       currency: 'INR',
       totalAmount: totalInr,
+      listTotalAmount: listComparableInr,
+      savingsAmount: savingsInr,
       teacherCount,
       plan,
       countryCode,
@@ -274,6 +361,8 @@ export function getQuote(
     featureAmount: convert(quoteInr.featureAmount),
     taxAmount: convert(quoteInr.taxAmount),
     totalAmount: convert(totalInr),
+    listTotalAmount: convert(listComparableInr),
+    savingsAmount: convert(savingsInr),
     breakdown: quoteInr.breakdown.map((item) => ({
       ...item,
       amount: convert(item.amount),

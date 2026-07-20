@@ -29,6 +29,108 @@ function includesAnyWord(text: string, terms: string[]): boolean {
   });
 }
 
+type Intent =
+  | 'greeting'
+  | 'homework'
+  | 'syllabus'
+  | 'notices'
+  | 'events'
+  | 'feed'
+  | 'fees'
+  | 'bus'
+  | 'attendance'
+  | 'timetable'
+  | 'team'
+  | 'subscription'
+  | 'leave'
+  | 'unknown';
+
+/**
+ * Score-based intent detection. Bus is checked before attendance so
+ * "bus late" / "transport status" never returns the attendance register.
+ */
+function detectIntent(q: string): Intent {
+  if (!q) return 'unknown';
+  if (includesAnyWord(q, ['hello', 'hi', 'hey', 'help'])) return 'greeting';
+
+  const scores: Partial<Record<Intent, number>> = {};
+  const bump = (intent: Intent, n: number) => {
+    scores[intent] = (scores[intent] ?? 0) + n;
+  };
+
+  // Strong domain keywords
+  if (includesAny(q, ['bus', 'transport', 'gps', 'vehicle', 'fleet'])) bump('bus', 10);
+  if (includesAnyWord(q, ['route']) && includesAny(q, ['bus', 'transport', 'driver', 'pickup', 'drop'])) {
+    bump('bus', 8);
+  }
+  if (includesAny(q, ['bus']) && includesAnyWord(q, ['late', 'delay', 'status', 'location', 'live', 'where'])) {
+    bump('bus', 12);
+  }
+
+  if (includesAny(q, ['attendance', 'register', 'present', 'absent'])) bump('attendance', 10);
+  if (includesAnyWord(q, ['late']) && includesAny(q, ['student', 'class', 'marked', 'came', 'arrival', 'attendance'])) {
+    bump('attendance', 8);
+  }
+  // Bare "late" without bus/fee context → weak attendance only if school words present
+  if (includesAnyWord(q, ['late']) && !includesAny(q, ['bus', 'transport', 'fee', 'fees', 'payment'])) {
+    bump('attendance', 2);
+  }
+
+  if (includesAny(q, ['homework', 'assignment', 'worksheet'])) bump('homework', 10);
+  if (
+    includesAnyWord(q, ['due']) &&
+    includesAny(q, ['homework', 'assignment', 'work', 'task', 'soon', 'week'])
+  ) {
+    bump('homework', 8);
+  }
+
+  if (includesAny(q, ['syllabus', 'curriculum', 'chapter', 'lesson plan', 'lessons'])) bump('syllabus', 10);
+  if (includesAnyWord(q, ['unit']) && includesAny(q, ['syllabus', 'chapter', 'subject', 'class'])) {
+    bump('syllabus', 6);
+  }
+
+  if (includesAny(q, ['notice', 'notices', 'announcement', 'circular', 'bulletin'])) bump('notices', 10);
+  if (includesAny(q, ['event', 'events', 'sports day', 'exhibition', 'cultural', 'happening'])) {
+    bump('events', 10);
+  }
+  if (includesAny(q, ['feed', 'community', 'social']) || includesAnyWord(q, ['post', 'posts', 'share'])) {
+    bump('feed', 8);
+  }
+
+  if (includesAny(q, ['fee', 'fees', 'payment', 'outstanding', 'owe', 'balance', 'collect', 'invoice'])) {
+    bump('fees', 10);
+  }
+  if (
+    includesAnyWord(q, ['due', 'pending', 'overdue', 'defaulter']) &&
+    includesAny(q, ['fee', 'fees', 'payment', 'money', 'amount', 'month', 'student'])
+  ) {
+    bump('fees', 8);
+  }
+
+  if (includesAny(q, ['timetable', 'schedule', 'period', 'periods'])) bump('timetable', 10);
+  if (includesAny(q, ['class today']) || (includesAnyWord(q, ['today']) && includesAny(q, ['class', 'period']))) {
+    bump('timetable', 6);
+  }
+
+  if (includesAny(q, ['team', 'staff', 'invite', 'member'])) bump('team', 8);
+  if (includesAnyWord(q, ['teacher', 'teachers']) && includesAny(q, ['count', 'how many', 'team', 'staff'])) {
+    bump('team', 6);
+  }
+
+  if (includesAny(q, ['plan', 'subscription', 'trial', 'billing'])) bump('subscription', 10);
+  if (includesAnyWord(q, ['leave', 'holiday', 'holidays'])) bump('leave', 8);
+
+  let best: Intent = 'unknown';
+  let bestScore = 0;
+  for (const [intent, score] of Object.entries(scores) as [Intent, number][]) {
+    if (score > bestScore) {
+      bestScore = score;
+      best = intent;
+    }
+  }
+  return bestScore >= 6 ? best : bestScore > 0 ? best : 'unknown';
+}
+
 export function getAiSuggestionPrompts(snapshot: SchoolAiSnapshot): string[] {
   const { role } = snapshot;
   const admin: string[] = [
@@ -86,24 +188,21 @@ export function getAiSuggestionPrompts(snapshot: SchoolAiSnapshot): string[] {
 export function answerFromSchoolSnapshot(question: string, snapshot: SchoolAiSnapshot): string {
   const q = question.toLowerCase().trim();
   const { schoolName, currency, today, role } = snapshot;
+  const intent = detectIntent(q);
 
-  if (!q) {
+  if (intent === 'unknown' && !q) {
     return `Ask me anything about ${schoolName} — fees, attendance, homework, syllabus, notices, events, buses, or team.`;
   }
 
-  // Word-boundary only: bare "hi" must not match "child" or "this"
-  if (includesAnyWord(q, ['hello', 'hi', 'hey', 'help'])) {
+  if (intent === 'greeting') {
     return `Hello${snapshot.viewerName ? `, ${snapshot.viewerName}` : ''}! I'm your AI assistant for **${schoolName}**. I answer using your school data — try a suggestion below, or ask about fees, attendance, homework, syllabus, notices, events, buses, or timetable.`;
   }
 
-  // Homework before fees when "due" alone would otherwise match fee balances
-  const homeworkIntent =
-    snapshot.homework &&
-    (includesAny(q, ['homework', 'assignment', 'worksheet']) ||
-      (includesAny(q, ['due']) && includesAny(q, ['homework', 'assignment', 'work', 'task', 'soon'])));
-
-  if (homeworkIntent) {
-    const h = snapshot.homework!;
+  if (intent === 'homework') {
+    if (!snapshot.homework) {
+      return `No homework data is loaded yet for ${schoolName}. Teachers can publish assignments under **Homework**.`;
+    }
+    const h = snapshot.homework;
     if (h.upcoming.length === 0) {
       return `No homework assignments are scheduled right now for ${schoolName}.`;
     }
@@ -113,14 +212,11 @@ export function answerFromSchoolSnapshot(question: string, snapshot: SchoolAiSna
     return `**${h.count} assignment(s)** on file. Upcoming:\n${list}`;
   }
 
-  if (
-    snapshot.syllabus &&
-    includesAny(q, ['syllabus', 'curriculum', 'chapter', 'unit', 'lesson plan', 'lessons'])
-  ) {
-    const s = snapshot.syllabus;
-    if (s.units.length === 0) {
+  if (intent === 'syllabus') {
+    if (!snapshot.syllabus || snapshot.syllabus.units.length === 0) {
       return `No syllabus units are published yet. Teachers can add them under **Syllabus**.`;
     }
+    const s = snapshot.syllabus;
     const list = s.units
       .map(
         (u) =>
@@ -130,38 +226,32 @@ export function answerFromSchoolSnapshot(question: string, snapshot: SchoolAiSna
     return `**Syllabus (${s.count} unit(s))**\n${list}\n\nOpen **Syllabus** to add or update chapters.`;
   }
 
-  if (
-    snapshot.notices &&
-    includesAny(q, ['notice', 'notices', 'announcement', 'circular', 'bulletin'])
-  ) {
-    const n = snapshot.notices;
-    if (n.latest.length === 0) {
+  if (intent === 'notices') {
+    if (!snapshot.notices || snapshot.notices.latest.length === 0) {
       return `There are no notices posted yet for ${schoolName}.`;
     }
+    const n = snapshot.notices;
     const list = n.latest
       .map((item) => `• **${item.title}** — ${item.audience} · ${item.date}`)
       .join('\n');
     return `**${n.count} notice(s)** on the board. Latest:\n${list}\n\nManage under **Notices**.`;
   }
 
-  if (
-    snapshot.events &&
-    includesAny(q, ['event', 'events', 'sports day', 'exhibition', 'cultural', 'happening'])
-  ) {
-    const e = snapshot.events;
-    if (e.upcoming.length === 0) {
+  if (intent === 'events') {
+    if (!snapshot.events || snapshot.events.upcoming.length === 0) {
       return `No upcoming school events are published yet.`;
     }
+    const e = snapshot.events;
     const list = e.upcoming
       .map((item) => `• **${item.title}** — ${item.date} @ ${item.location} (${item.category})`)
       .join('\n');
     return `**Upcoming events (${e.count})**\n${list}\n\nFull calendar is under **Community feed** / Events.`;
   }
 
-  if (
-    snapshot.feed &&
-    includesAny(q, ['feed', 'community', 'social', 'post', 'posts', 'share'])
-  ) {
+  if (intent === 'feed') {
+    if (!snapshot.feed) {
+      return `The community feed is empty. Teachers and admins can publish updates under **Community feed**.`;
+    }
     const f = snapshot.feed;
     const list = f.latest
       .map((item) => `• **${item.title}** — ${item.author} (${item.type})`)
@@ -169,14 +259,11 @@ export function answerFromSchoolSnapshot(question: string, snapshot: SchoolAiSna
     return `**Community feed (${f.count} post(s))**\n${list || 'No posts yet.'}\n\nTeachers and admins can publish updates under **Community feed**.`;
   }
 
-  const feeIntent =
-    snapshot.fees &&
-    (includesAny(q, ['fee', 'fees', 'payment', 'outstanding', 'owe', 'balance', 'collect']) ||
-      (includesAny(q, ['due', 'pending']) &&
-        includesAny(q, ['fee', 'fees', 'payment', 'money', 'amount', 'month'])));
-
-  if (feeIntent) {
-    const f = snapshot.fees!;
+  if (intent === 'fees') {
+    if (!snapshot.fees) {
+      return `Fee data is not available yet. Open **Fees** to set up student fee accounts.`;
+    }
+    const f = snapshot.fees;
     if (includesAny(q, ['month', 'this month', 'current month'])) {
       return [
         `**Fee outstanding — ${monthKey(today)}**`,
@@ -191,7 +278,7 @@ export function answerFromSchoolSnapshot(question: string, snapshot: SchoolAiSna
         .filter(Boolean)
         .join('\n');
     }
-    if (includesAny(q, ['overdue', 'late', 'defaulter'])) {
+    if (includesAny(q, ['overdue', 'defaulter']) || (includesAnyWord(q, ['late']) && includesAny(q, ['fee', 'fees', 'payment']))) {
       if (f.overdueCount === 0) {
         return `No students are overdue on fees right now. Total pending across the school is **${formatMoney(f.totalPending, currency)}**.`;
       }
@@ -218,9 +305,19 @@ export function answerFromSchoolSnapshot(question: string, snapshot: SchoolAiSna
     ].join('\n');
   }
 
-  if (
-    includesAny(q, ['attendance', 'present', 'absent', 'late', 'mark', 'register'])
-  ) {
+  // Bus BEFORE attendance handling — critical for "bus late / bus status"
+  if (intent === 'bus') {
+    if (!snapshot.busRoutes || snapshot.busRoutes.count === 0) {
+      return `No bus routes are configured yet for ${schoolName}. Add routes under **Bus tracking**.`;
+    }
+    const b = snapshot.busRoutes;
+    const list = b.routes
+      .map((r) => `• **${r.name}** — ${r.driver}, ${r.vehicleNo} (${r.status})`)
+      .join('\n');
+    return `**Bus fleet (${b.count} routes)** — ${b.active} active now:\n${list}\n\nDrivers update GPS from **My route**; parents see live location under **Bus tracking**.`;
+  }
+
+  if (intent === 'attendance') {
     if (!snapshot.attendance) {
       return `No attendance has been marked for today yet. Teachers can mark the register under **Attendance**.`;
     }
@@ -232,24 +329,15 @@ export function answerFromSchoolSnapshot(question: string, snapshot: SchoolAiSna
       return `**Attendance — ${a.date}**\n• Absent (${a.absent}): ${names}\n• Present: ${a.present} · Late: ${a.late} · Total marked: ${a.total}`;
     }
     if (role === 'parent' && includesAny(q, ['child', 'my kid', 'my son', 'my daughter'])) {
-      const absent = a.absentStudents ?? [];
-      if (absent.length === 0) {
-        return `Based on today's register (${a.date}), no absences are recorded for your child's class. Check **Attendance** for the full record.`;
-      }
       return `Today's register (${a.date}): **${a.present} present**, **${a.absent} absent**, **${a.late} late** (total marked: ${a.total}). Open **Attendance** to see your child's status.`;
     }
     return `**Today's attendance (${a.date})**\n• Present: **${a.present}**\n• Absent: **${a.absent}**\n• Late: **${a.late}**\n• Total students marked: **${a.total}**${a.byClass ? `\n• By class: ${Object.entries(a.byClass).map(([c, v]) => `${c} (${v.present}P/${v.absent}A/${v.late}L)`).join(' · ')}` : ''}`;
   }
 
-  if (snapshot.busRoutes && includesAny(q, ['bus', 'transport', 'route', 'gps', 'vehicle'])) {
-    const b = snapshot.busRoutes;
-    const list = b.routes
-      .map((r) => `• **${r.name}** — ${r.driver}, ${r.vehicleNo} (${r.status})`)
-      .join('\n');
-    return `**Bus fleet (${b.count} routes)** — ${b.active} active now:\n${list}\n\nDrivers update GPS from My route; parents see live location under **Bus tracking**.`;
-  }
-
-  if (snapshot.timetable && includesAny(q, ['timetable', 'schedule', 'class today', 'period', 'periods'])) {
+  if (intent === 'timetable') {
+    if (!snapshot.timetable) {
+      return `No timetable is set up yet. Add periods under **Timetable**.`;
+    }
     const t = snapshot.timetable;
     if (t.todaySlots.length === 0) {
       return `No timetable slots for **${t.todayDay}** in the current schedule. Add periods under **Timetable**.`;
@@ -260,19 +348,19 @@ export function answerFromSchoolSnapshot(question: string, snapshot: SchoolAiSna
     return `**${t.todayDay}'s schedule** (${t.count} slots total):\n${list}`;
   }
 
-  if (snapshot.team && includesAny(q, ['team', 'staff', 'teacher', 'invite', 'member'])) {
+  if (intent === 'team' && snapshot.team) {
     const t = snapshot.team;
     return `**Team — ${schoolName}**\n• Total members: **${t.total}**\n• Teachers: ${t.teachers} · Parents: ${t.parents} · Students: ${t.students} · Drivers: ${t.drivers}\n\nInvite new members under **User management**.`;
   }
 
-  if (snapshot.subscription && includesAny(q, ['plan', 'subscription', 'trial', 'billing'])) {
+  if (intent === 'subscription' && snapshot.subscription) {
     const s = snapshot.subscription;
     return `**Subscription**\n• Plan: **${s.planName}** (${s.status})\n• Students: ${s.studentCount} · Staff: ${s.teacherCount}${s.trialEndsAt ? `\n• Trial ends: ${s.trialEndsAt.slice(0, 10)}` : ''}\n\nManage billing under **Subscription**.`;
   }
 
-  if (includesAny(q, ['leave', 'holiday'])) {
+  if (intent === 'leave') {
     return 'Apply for leave under **Leave requests**. Approved school holidays appear in the **Holiday calendar**.';
   }
 
-  return `I can help with **fees**, **attendance**, **homework**, **syllabus**, **notices**, **events**, **community feed**, **bus routes**, **timetable**, and **team** for ${schoolName}. Try a suggestion below or ask something specific.`;
+  return `I can help with **fees**, **attendance**, **homework**, **syllabus**, **notices**, **events**, **community feed**, **bus routes**, **timetable**, and **team** for ${schoolName}. Try a suggestion below or ask something specific — e.g. "Bus route live status" or "Is my child present today?".`;
 }

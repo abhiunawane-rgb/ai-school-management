@@ -128,6 +128,7 @@ export function createDemoFeed(): CommunityPost[] {
       body: 'Share school moments, celebrate wins, and keep families updated. Teachers can post class highlights; admins can pin important updates.',
       createdAt: new Date(now - 2 * 3600_000).toISOString(),
       likes: 12,
+      likedBy: [],
       pinned: true,
     },
     {
@@ -139,6 +140,7 @@ export function createDemoFeed(): CommunityPost[] {
       body: 'Selected students for march-past must report at 7:30 AM. Bring house T-shirts.',
       createdAt: new Date(now - 26 * 3600_000).toISOString(),
       likes: 8,
+      likedBy: [],
       pinned: false,
     },
     {
@@ -150,6 +152,7 @@ export function createDemoFeed(): CommunityPost[] {
       body: 'Remember: keep both sides balanced when solving equations. Practice set uploaded under Syllabus.',
       createdAt: new Date(now - 50 * 3600_000).toISOString(),
       likes: 15,
+      likedBy: [],
       pinned: false,
     },
   ];

@@ -440,7 +440,7 @@ export function SignupWizard() {
                   onChange={(e) => setInterval(e.target.value as 'monthly' | 'yearly')}
                   className="mt-1 w-full h-11 rounded-xl border px-3"
                 >
-                  <option value="yearly">Yearly (save 15%)</option>
+                  <option value="yearly">Yearly (save 20%)</option>
                   <option value="monthly">Monthly</option>
                 </select>
               </label>
