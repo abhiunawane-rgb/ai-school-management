@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   trailingSlash: isStaticExport,
   basePath: bigrockBasePath || undefined,
   assetPrefix: bigrockBasePath || undefined,
+  // Slow machines / concurrent export workers can exceed the default 60s
+  staticPageGenerationTimeout: 180,
   images: {
     unoptimized: isStaticExport,
     remotePatterns: [
